@@ -1,5 +1,13 @@
 
     document.addEventListener('DOMContentLoaded', async () => {
+
+      // Descriptions are rich text now -- cards show a short plain-text preview.
+      const textPreview = (html, max = 160) => {
+        const d = document.createElement('div');
+        d.innerHTML = html == null ? '' : String(html);
+        const t = (d.textContent || '').replace(/\s+/g, ' ').trim();
+        return (t.length > max ? t.slice(0, max).trimEnd() + '\u2026' : t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      };
       // ── Helpers ──────────────────────────────────────────────────
       const fmtNaira = (n) => '₦' + Number(n || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       const fmtDate  = (iso) => {
@@ -47,34 +55,55 @@
       let cachedCertificateCohortId = null; // which cohortId cachedCertificate was resolved for
 
       // ── Trainings ────────────────────────────────────────────────
+      function filteredTrainings() {
+        const searchInput = document.getElementById('trainingSearch');
+        const keyword = searchInput ? (searchInput.value || '').trim().toLowerCase() : '';
+        if (!keyword) return trainingsCache;
+        return trainingsCache.filter(t => {
+          const haystack = [t.name, t.description, t.category].filter(Boolean).join(' ').toLowerCase();
+          return haystack.includes(keyword);
+        });
+      }
+
+      function renderTrainingsGrid() {
+        const grid = document.getElementById('trainingsGrid');
+        const list = filteredTrainings();
+        if (!trainingsCache.length) {
+          grid.innerHTML = '<div class="empty-state">No programmes are published yet — check back soon.</div>';
+          return;
+        }
+        if (!list.length) {
+          grid.innerHTML = '<div class="empty-state">No programmes match that search.</div>';
+          return;
+        }
+        grid.innerHTML = list.map(t => {
+          const moduleCount = Array.isArray(t.curriculumModules) ? t.curriculumModules.length : 0;
+          return `
+            <div class="trn-card" data-id="${t.id}">
+              ${t.coverImageUrl ? `<img src="${t.coverImageUrl}" alt="" class="trn-card-image" style="width:100%;height:140px;object-fit:cover;border-radius:8px;margin-bottom:10px;">` : ''}
+              <div class="trn-card-top">
+                <div class="trn-card-name">${t.name}</div>
+                ${t.category ? `<span class="trn-card-category">${t.category}</span>` : ''}
+              </div>
+              <div class="trn-card-desc">${textPreview(t.description) || 'No description provided yet.'}</div>
+              ${moduleCount ? `<div class="trn-card-modules">${moduleCount} curriculum module${moduleCount === 1 ? '' : 's'}</div>` : ''}
+              <div class="trn-card-bottom">
+                <div class="trn-card-price">${fmtNaira(t.price)}</div>
+                ${t.certificationEnabled ? '<div class="trn-card-cert">\u{1F393} Certificate included</div>' : ''}
+              </div>
+            </div>`;
+        }).join('');
+
+        grid.querySelectorAll('.trn-card').forEach(card => {
+          card.addEventListener('click', () => selectTraining(card.dataset.id));
+        });
+      }
+
       async function loadTrainings() {
         const grid = document.getElementById('trainingsGrid');
         try {
           trainingsCache = await AcademyTrainingAPI.getTrainings();
-          if (!trainingsCache.length) {
-            grid.innerHTML = '<div class="empty-state">No programmes are published yet — check back soon.</div>';
-            return;
-          }
-          grid.innerHTML = trainingsCache.map(t => {
-            const moduleCount = Array.isArray(t.curriculumModules) ? t.curriculumModules.length : 0;
-            return `
-              <div class="trn-card" data-id="${t.id}">
-                <div class="trn-card-top">
-                  <div class="trn-card-name">${t.name}</div>
-                  ${t.category ? `<span class="trn-card-category">${t.category}</span>` : ''}
-                </div>
-                <div class="trn-card-desc">${t.description || 'No description provided yet.'}</div>
-                ${moduleCount ? `<div class="trn-card-modules">${moduleCount} curriculum module${moduleCount === 1 ? '' : 's'}</div>` : ''}
-                <div class="trn-card-bottom">
-                  <div class="trn-card-price">${fmtNaira(t.price)}</div>
-                  ${t.certificationEnabled ? '<div class="trn-card-cert">\u{1F393} Certificate included</div>' : ''}
-                </div>
-              </div>`;
-          }).join('');
-
-          grid.querySelectorAll('.trn-card').forEach(card => {
-            card.addEventListener('click', () => selectTraining(card.dataset.id));
-          });
+          renderTrainingsGrid();
         } catch (err) {
           grid.innerHTML = '<div class="empty-state">Could not load programmes.</div>';
           toast(errMsg(err, 'Could not load programmes.'), 'error');
@@ -295,10 +324,12 @@
             <div class="trn-reg-actions"><button class="btn-trn btn-trn-primary" id="btnVerifyPayment">I've Completed Payment — Verify</button></div>`;
         } else if (isConfirmed) {
           body += `<div class="trn-reg-line" style="color:var(--success);font-weight:600;">Registration confirmed.</div>`;
+          body += `<div class="trn-reg-actions"><a class="btn-trn btn-trn-primary" href="app/id-card.html?registrationId=${encodeURIComponent(state.registrationId)}" target="_blank" rel="noopener">View My ID Card</a></div>`;
           if (state.cohortId && cachedCertificateCohortId !== state.cohortId) {
             ensureCertificateChecked(state.cohortId);
           } else if (cachedCertificate) {
             body += `<div class="trn-reg-line" style="color:var(--success);font-weight:600;">🎓 Certificate earned — ${cachedCertificate.certificateNumber}</div>`;
+            body += `<div class="trn-reg-actions"><a class="btn-trn btn-trn-primary" href="${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ACADEMY_COMMERCE.CERTIFICATES}/${encodeURIComponent(cachedCertificate.certificateNumber)}/download" target="_blank" rel="noopener">Download Certificate (PDF)</a></div>`;
           }
           if (idStatus === 'VERIFIED') {
             body += `<div class="trn-reg-line">Identity verification: <span class="trn-pill trn-pill-VERIFIED">VERIFIED</span></div>`;
@@ -468,6 +499,9 @@
       // ── Init ─────────────────────────────────────────────────────
       renderRegPanelFromState();
       await handlePaymentReturn();
+      const trainingSearchInput = document.getElementById('trainingSearch');
+      if (trainingSearchInput) trainingSearchInput.addEventListener('input', renderTrainingsGrid);
+
       await loadTrainings();
       await restoreSelectionFromQuery();
     });

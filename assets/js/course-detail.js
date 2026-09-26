@@ -9,6 +9,13 @@
       const toast = (msg, type = 'success') => { if (typeof UIHelper !== 'undefined') UIHelper.showToast(msg, type); };
       const errMsg = (err, fallback) => (err && err.message) ? err.message : fallback;
       const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      // Description/requirements/objectives/do's/don'ts are rich text from the
+      // admin editor, sanitised server-side (sanitizeRichText). Older plain-text
+      // values are escaped instead, keeping their line breaks.
+      const richText = (s) => {
+        const v = s == null ? '' : String(s);
+        return /<\/?[a-z][\s\S]*>/i.test(v) ? v : esc(v).replace(/\n/g, '<br>');
+      };
 
       const STATE_KEY = 'hairlux_academy_course_pending';
       const saveState = (payload) => { try { window.sessionStorage.setItem(STATE_KEY, JSON.stringify(payload)); } catch (_) {} };
@@ -55,7 +62,11 @@
         if (lesson.type === 'PDF') return `<div class="crs-media-wrap"><iframe src="${esc(key)}"></iframe></div>`;
         // TEXT
         if (/^https?:\/\//i.test(key)) return `<div class="form-hint">Read: <a href="${esc(key)}" target="_blank" rel="noopener">${esc(key)}</a></div>`;
-        return `<div class="crs-text-lesson">${esc(key)}</div>`;
+        // TEXT lesson body: rich text from the admin editor, sanitised server-side.
+        // Older plain-text lessons are escaped, keeping their line breaks.
+        return /<\/?[a-z][\s\S]*>/i.test(key)
+          ? `<div class="crs-text-lesson crs-rich">${key}</div>`
+          : `<div class="crs-text-lesson">${esc(key)}</div>`;
       }
 
       function renderCurriculum() {
@@ -73,7 +84,7 @@
               const canPreview = !owned && l.previewAvailable;
               const locked = !owned && !l.previewAvailable;
               return `
-                <div class="crs-lesson-row ${locked ? 'is-locked' : ''}" data-lesson-id="${l.id}" ${canPreview ? 'data-previewable="1" style="cursor:pointer;"' : ''}>
+                <div class="crs-lesson-row ${locked ? 'is-locked' : ''}" data-lesson-id="${l.id}" ${canPreview ? 'data-previewable="1" style="cursor:pointer;"' : ''}${owned ? ' data-owned="1" style="cursor:pointer;" title="Open lesson"' : ''}>
                   <div class="crs-lesson-left">
                     <span class="crs-lesson-icon">${locked ? '🔒' : (canPreview ? '▶' : '▶')}</span>
                     <span class="crs-lesson-name">${esc(l.title)}</span>
@@ -86,7 +97,17 @@
           </div>`).join('')}</div>`;
       }
 
+      // The course player lives under app/, this page at the site root.
+      const playerUrl = (lessonId) => `app/course-player.html?id=${encodeURIComponent(courseId)}${lessonId ? `&lesson=${encodeURIComponent(lessonId)}` : ''}`;
+
       function bindPreviewToggles() {
+        // Enrolled learners: a lesson row opens that lesson in the course
+        // player (which loads the full, access-checked content -- the public
+        // course payload only carries contentKey for preview lessons).
+        document.querySelectorAll('.crs-lesson-row[data-owned="1"]').forEach(row => {
+          row.addEventListener('click', () => { window.location.href = playerUrl(row.dataset.lessonId); });
+        });
+
         document.querySelectorAll('.crs-lesson-row[data-previewable="1"]').forEach(row => {
           row.addEventListener('click', () => {
             const lessonId = row.dataset.lessonId;
@@ -136,7 +157,7 @@
             <div class="crs-progress-label">${pct}% complete</div>
             <button class="btn-crs btn-crs-primary btn-crs-block" style="margin-top:16px;" id="btnContinue">${isComplete ? 'Review Course' : 'Continue Learning'}</button>
             ${isComplete && course.certificateEnabled ? (myCertificate
-              ? `<div class="crs-cert-badge" style="margin-top:12px;">🎓 Certificate earned — ${esc(myCertificate.certificateNumber)}</div><div class="crs-cert-note">Keep this number for your records — Hairlux Academy can verify it on request.</div>`
+              ? `<div class="crs-cert-badge" style="margin-top:12px;">🎓 Certificate earned — ${esc(myCertificate.certificateNumber)}</div><div class="crs-cert-note">Keep this number for your records — Hairlux Academy can verify it on request.</div><a class="btn-crs btn-crs-outline btn-crs-block" style="margin-top:10px;" href="${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ACADEMY_COMMERCE.CERTIFICATES}/${encodeURIComponent(myCertificate.certificateNumber)}/download" target="_blank" rel="noopener">Download Certificate (PDF)</a>`
               : '<div class="crs-cert-badge" style="margin-top:12px;">🎓 Certificate earned</div><div class="crs-cert-note">Your certificate is being issued — check back shortly, or reach out to Hairlux Academy.</div>') : ''}
             ${isComplete ? '<button class="btn-crs btn-crs-outline btn-crs-block" style="margin-top:10px;" id="btnWriteReview">Write a Review</button>' : ''}
           </div>`;
@@ -166,6 +187,7 @@
           <div class="crs-detail-grid">
             <div class="crs-detail-main">
               <div class="crs-detail-hero">
+                ${course.coverImageUrl ? `<img src="${course.coverImageUrl}" alt="" style="width:100%;max-height:320px;object-fit:cover;border-radius:12px;margin-bottom:16px;">` : ''}
                 <div class="crs-detail-meta-row">
                   ${course.category ? `<span class="crs-card-badge">${esc(course.category)}</span>` : ''}
                   <span class="crs-pill crs-pill-${course.status}">${course.status.replace('_', ' ')}</span>
@@ -174,11 +196,11 @@
                 </div>
                 <h1>${esc(course.title)}</h1>
                 ${course.instructor ? `<div class="form-hint" style="margin-bottom:12px;">Instructor: ${esc(course.instructor.name)}${course.instructor.currentRole ? ' — ' + esc(course.instructor.currentRole) : ''}</div>` : ''}
-                <div class="crs-detail-desc">${esc(course.description || course.shortDescription || '')}</div>
-                ${course.requirements ? `<div class="crs-detail-block"><h4>Requirements</h4><p>${esc(course.requirements)}</p></div>` : ''}
-                ${course.learningObjectives ? `<div class="crs-detail-block"><h4>What you'll learn</h4><p>${esc(course.learningObjectives)}</p></div>` : ''}
-                ${course.dos ? `<div class="crs-detail-block"><h4>Do's</h4><p>${esc(course.dos)}</p></div>` : ''}
-                ${course.donts ? `<div class="crs-detail-block"><h4>Don'ts</h4><p>${esc(course.donts)}</p></div>` : ''}
+                <div class="crs-detail-desc crs-rich">${richText(course.description || course.shortDescription || '')}</div>
+                ${course.requirements ? `<div class="crs-detail-block"><h4>Requirements</h4><div class="crs-rich">${richText(course.requirements)}</div></div>` : ''}
+                ${course.learningObjectives ? `<div class="crs-detail-block"><h4>What you'll learn</h4><div class="crs-rich">${richText(course.learningObjectives)}</div></div>` : ''}
+                ${course.dos ? `<div class="crs-detail-block"><h4>Do's</h4><div class="crs-rich">${richText(course.dos)}</div></div>` : ''}
+                ${course.donts ? `<div class="crs-detail-block"><h4>Don'ts</h4><div class="crs-rich">${richText(course.donts)}</div></div>` : ''}
               </div>
 
               <div>
@@ -199,7 +221,7 @@
         const btnEnroll = document.getElementById('btnEnroll');
         if (btnEnroll) btnEnroll.addEventListener('click', openPurchaseModal);
         const btnContinue = document.getElementById('btnContinue');
-        if (btnContinue) btnContinue.addEventListener('click', () => { window.location.href = `course-player.html?id=${courseId}`; });
+        if (btnContinue) btnContinue.addEventListener('click', () => { window.location.href = playerUrl(); });
         const btnWriteReview = document.getElementById('btnWriteReview');
         if (btnWriteReview) btnWriteReview.addEventListener('click', openReviewModal);
       }

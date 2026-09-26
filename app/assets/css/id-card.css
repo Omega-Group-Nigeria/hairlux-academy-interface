@@ -1,0 +1,180 @@
+.idc-shell {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 48px 20px 80px;
+}
+
+.idc-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.idc-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.idc-card {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #edf0f2;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, .12);
+}
+
+.idc-card-head {
+  background: #1a1a1a;
+  padding: 18px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.idc-card-brand {
+  color: #c9a872;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.idc-card-brand small {
+  display: block;
+  color: #ffffff;
+  font-size: 13px;
+  letter-spacing: .5px;
+  margin-top: 2px;
+  text-transform: none;
+  font-weight: 600;
+}
+
+.idc-status-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 5px 12px;
+  background: #eaf7ee;
+  color: #1e7a3d;
+}
+
+.idc-card-body {
+  padding: 26px 22px 22px;
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+.idc-avatar {
+  flex: 0 0 auto;
+  width: 68px;
+  height: 68px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #1a1a1a, #3a3a3a);
+  color: #c9a872;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: .5px;
+}
+
+.idc-details {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.idc-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 2px;
+}
+
+.idc-code {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: #8a8f98;
+  letter-spacing: .03em;
+  margin: 0 0 14px;
+}
+
+.idc-rows {
+  border-top: 1px solid #f2f2f2;
+}
+
+.idc-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f2f2f2;
+}
+
+.idc-row:last-child {
+  border-bottom: none;
+}
+
+.idc-row-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: #8a8f98;
+  white-space: nowrap;
+}
+
+.idc-row-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a1a;
+  text-align: right;
+}
+
+.idc-card-foot {
+  padding: 12px 22px;
+  background: #fafafa;
+  border-top: 1px solid #f2f2f2;
+  text-align: center;
+  font-size: 10px;
+  color: #aaaaaa;
+  letter-spacing: .03em;
+}
+
+.idc-note {
+  max-width: 420px;
+  margin: 18px auto 0;
+  text-align: center;
+  font-size: 13px;
+  color: #6c757d;
+}
+
+.idc-error,
+.idc-loading {
+  padding: 40px 20px;
+  text-align: center;
+  color: #6c757d;
+}
+[data-theme="dark"] .idc-note,
+[data-theme="dark"] .idc-error,
+[data-theme="dark"] .idc-loading { color: #a7adb8; }
+
+@media print {
+  body * { visibility: hidden; }
+  .navbar, .idc-actions, .idc-note, #toastContainer { display: none !important; }
+  .idc-card, .idc-card * { visibility: visible; }
+  .idc-card {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    margin: 40px auto;
+    box-shadow: none;
+  }
+}

@@ -18,6 +18,55 @@
       --warn: #8a6d1a;
       --warn-bg: #fdf6e3;
     }
+    :root[data-theme="dark"] {
+      --card-bg: #1c2027;
+      --surface: #14171c;
+      --surface-2: #20242c;
+      --primary: #f0ede6;
+      --primary-d: #ffffff;
+      --primary-light: rgba(201, 168, 114, .16);
+      --muted: #a7adb8;
+      --border: #30353f;
+      --shadow-soft: 0 6px 22px rgba(0, 0, 0, .35);
+      --danger: #ff8a80;
+      --danger-bg: rgba(192, 57, 43, .18);
+      --success: #6fcf97;
+      --success-bg: rgba(26, 110, 56, .18);
+      --warn: #e8c468;
+      --warn-bg: rgba(138, 109, 26, .18);
+    }
+
+    /* Literal (non-variable) colors from the rules above, patched for dark mode. */
+    [data-theme="dark"] .profile-list,
+    [data-theme="dark"] .top-profile { background: var(--card-bg); }
+    [data-theme="dark"] .trn-cohort-row { background: var(--surface-2); }
+    [data-theme="dark"] .trn-branch-filter { background: var(--surface-2); }
+    [data-theme="dark"] .trn-card-price,
+    [data-theme="dark"] .trn-summary-box .trn-summary-price { color: var(--primary); }
+    [data-theme="dark"] .trn-pill-ACTIVE,
+    [data-theme="dark"] .trn-pill-COMPLETED {
+      background: rgba(37, 81, 168, .22); color: #9dc0ee; border-color: rgba(37, 81, 168, .4);
+    }
+    [data-theme="dark"] .trn-pill-BELOW_MINIMUM {
+      background: rgba(255, 255, 255, .06); color: #a7adb8; border-color: var(--border);
+    }
+    [data-theme="dark"] .btn-trn-outline,
+    [data-theme="dark"] .btn-apply-code,
+    [data-theme="dark"] .btn-cancel { background: var(--card-bg); color: var(--primary); }
+    [data-theme="dark"] .trn-reg-line,
+    [data-theme="dark"] .trn-summary-box,
+    [data-theme="dark"] .form-group label,
+    [data-theme="dark"] .btn-cancel { color: var(--primary); }
+    [data-theme="dark"] .form-group input[type="text"],
+    [data-theme="dark"] .form-group input[type="email"] {
+      background: var(--surface-2); color: var(--primary); border-color: var(--border);
+    }
+    [data-theme="dark"] .form-group input:focus { background: var(--card-bg); }
+    [data-theme="dark"] .modal-box { background: var(--card-bg); }
+    [data-theme="dark"] .modal-close:hover { color: var(--primary); }
+[data-theme="dark"] .btn-trn-primary { color: #000; }
+[data-theme="dark"] .btn-save { color: #000; }
+
 
     body {
       background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%) !important;

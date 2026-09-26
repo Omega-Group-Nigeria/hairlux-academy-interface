@@ -19,6 +19,7 @@
       let flatLessons = []; // [{lesson, module}]
       let currentLessonId = params.get('lesson') || null;
       let assessmentId = params.get('assessment') || null;
+      const assessmentStates = {}; // assessmentId -> getAssessmentForAttempt() result, for sidebar badges
 
       function mediaMarkup(lesson) {
         if (!lesson.previewAvailable && !lesson._contentChecked) {
@@ -35,9 +36,14 @@
           return `<div class="crs-media-wrap"><video controls src="${esc(key)}"></video></div>`;
         }
         if (lesson.type === 'AUDIO') return `<div class="crs-media-wrap"><audio controls src="${esc(key)}"></audio></div>`;
-        if (lesson.type === 'PDF') return `<div class="crs-media-wrap"><iframe src="${esc(key)}"></iframe></div>`;
+        if (lesson.type === 'PDF') return `<div class="crs-media-wrap crs-media-pdf"><iframe src="${esc(key)}" allowfullscreen></iframe></div>
+          <div style="text-align:right;margin:-10px 0 18px;"><a class="btn-crs btn-crs-outline" href="${esc(key)}" target="_blank" rel="noopener">⤢ Open full screen</a></div>`;
         if (/^https?:\/\//i.test(key)) return `<div class="form-hint">Read: <a href="${esc(key)}" target="_blank" rel="noopener">${esc(key)}</a></div>`;
-        return `<div class="crs-text-lesson">${esc(key)}</div>`;
+        // TEXT lesson body: rich text from the admin editor, sanitised server-side.
+        // Older plain-text lessons are escaped, keeping their line breaks.
+        return /<\/?[a-z][\s\S]*>/i.test(key)
+          ? `<div class="crs-text-lesson crs-rich">${key}</div>`
+          : `<div class="crs-text-lesson">${esc(key)}</div>`;
       }
 
       function lastIndex() {
@@ -103,9 +109,7 @@
           (m.assessments || []).forEach((a, i) => {
             const label = (m.assessments.length > 1) ? `Module Assessment ${i + 1}` : 'Module Assessment';
             const isCurrent = assessmentId === a.id;
-            html += `<div class="crs-player-lesson crs-player-assessment ${isCurrent ? 'is-current' : ''}" data-assessment-id="${a.id}">
-              <span class="crs-player-lesson-icon">📝</span><span>${esc(label)}</span>
-            </div>`;
+            html += assessmentRow(a.id, label, isCurrent);
           });
         });
         if (course.assessments && course.assessments.length) {
@@ -113,9 +117,7 @@
           course.assessments.forEach((a, i) => {
             const label = (course.assessments.length > 1) ? `Final Assessment ${i + 1}` : 'Final Assessment';
             const isCurrent = assessmentId === a.id;
-            html += `<div class="crs-player-lesson crs-player-assessment ${isCurrent ? 'is-current' : ''}" data-assessment-id="${a.id}">
-              <span class="crs-player-lesson-icon">📝</span><span>${esc(label)}</span>
-            </div>`;
+            html += assessmentRow(a.id, label, isCurrent);
           });
         }
         return html;
@@ -140,6 +142,46 @@
           </div>`;
       }
 
+      function assessmentRow(id, label, isCurrent) {
+        const st = assessmentStates[id];
+        const passed = st && st.alreadyPassed;
+        return `<div class="crs-player-lesson crs-player-assessment ${isCurrent ? 'is-current' : ''}" data-assessment-id="${id}">
+          <span class="crs-player-lesson-icon">${passed ? '✓' : '📝'}</span><span>${esc(label)}</span>
+          ${passed ? '<span class="crs-assessment-passed">Passed</span>' : ''}
+        </div>`;
+      }
+
+      function allAssessmentIds() {
+        const ids = [];
+        (course.modules || []).forEach(m => (m.assessments || []).forEach(a => ids.push(a.id)));
+        (course.assessments || []).forEach(a => ids.push(a.id));
+        return ids;
+      }
+
+      /** Loads pass/fail state for every assessment so the sidebar can show "Passed". */
+      async function loadAssessmentStates() {
+        await Promise.all(allAssessmentIds().map(async (id) => {
+          try { assessmentStates[id] = await AcademyCoursesAPI.getAssessmentForAttempt(id); } catch (_) { /* badge just won't show */ }
+        }));
+        const sidebar = document.getElementById('sidebarInner');
+        if (sidebar) { sidebar.innerHTML = renderSidebar(); bindSidebar(); }
+      }
+
+      function blockedMarkup(state) {
+        if (state.blockedReason === 'PASSED' || state.alreadyPassed) {
+          const score = state.bestPassingScore != null ? ` — score ${state.bestPassingScore}%` : '';
+          return `<div class="crs-assessment-result is-passed">✓ Passed${score}</div>
+            <div class="form-hint" style="margin-top:8px;">You've passed this assessment, so it can't be retaken.</div>`;
+        }
+        const last = state.lastResult
+          ? `<div class="crs-assessment-result is-failed">✗ Not passed — score ${state.lastResult.score}% (passing score ${state.passingScore}%)</div>`
+          : '';
+        const why = state.blockedReason === 'NO_RETAKES'
+          ? 'Retakes are not allowed for this assessment.'
+          : `You've used all ${state.maxAttempts} attempt${state.maxAttempts === 1 ? '' : 's'} for this assessment.`;
+        return `${last}<div class="empty-state" style="margin-top:10px;">${why}</div>`;
+      }
+
       function renderAssessmentPane(id) {
         return `<div id="assessmentPane"><div class="empty-state">Loading assessment…</div></div>`;
       }
@@ -148,14 +190,20 @@
         const pane = document.getElementById('assessmentPane');
         try {
           const state = await AcademyCoursesAPI.getAssessmentForAttempt(id);
-          if (!state.canAttempt) {
-            pane.innerHTML = `<h2>Assessment</h2><div class="empty-state">${state.alreadyPassed ? 'You have already passed this assessment.' : 'No attempts remaining for this assessment.'}</div>`;
+          assessmentStates[id] = state;
+          if (state.alreadyPassed && !state.blockedReason) state.blockedReason = 'PASSED'; // passing is always final
+          if (!state.canAttempt || state.alreadyPassed) {
+            pane.innerHTML = `<h2>Assessment</h2>${blockedMarkup(state)}`;
             return;
           }
+          const lastFail = state.lastResult && !state.lastResult.passed
+            ? `<div class="crs-assessment-result is-failed" style="margin-bottom:12px;">✗ Last attempt not passed — score ${state.lastResult.score}%. You can try again.</div>`
+            : '';
           pane.innerHTML = `
             <h2>Assessment</h2>
+            ${lastFail}
             <div class="crs-player-content-meta">Passing score ${state.passingScore}% · ${state.attemptsRemaining} attempt${state.attemptsRemaining === 1 ? '' : 's'} remaining${state.timeLimit ? ` · ${state.timeLimit} min time limit` : ''}</div>
-            <button class="btn-crs btn-crs-primary" id="btnStartAttempt">Start Attempt</button>
+            <button class="btn-crs btn-crs-primary" id="btnStartAttempt">${state.attemptsUsed ? 'Retake Assessment' : 'Start Attempt'}</button>
             <div id="attemptForm" style="margin-top:18px;"></div>`;
           document.getElementById('btnStartAttempt').addEventListener('click', async () => {
             const btn = document.getElementById('btnStartAttempt');
@@ -206,12 +254,28 @@
           try {
             const result = await AcademyCoursesAPI.submitAttempt(assessmentId, sessionId, answers);
             const resultBox = document.getElementById('attemptResult');
+            btn.disabled = true;
+            // Re-read the state so the pane shows the right follow-up:
+            // "Passed" (no retake), "Retake" (failed, attempts left) or out of attempts.
+            const fresh = await AcademyCoursesAPI.getAssessmentForAttempt(assessmentId);
+            assessmentStates[assessmentId] = fresh;
+            const sidebar = document.getElementById('sidebarInner');
+            if (sidebar) { sidebar.innerHTML = renderSidebar(); bindSidebar(); }
             if (typeof result.passed === 'boolean') {
-              resultBox.innerHTML = `<div class="form-${result.passed ? 'success' : 'error'} is-visible">${result.passed ? '✓ Passed' : '✗ Not passed'} — score ${result.score}%</div>`;
+              if (result.passed) {
+                document.getElementById('assessmentPane').innerHTML = `<h2>Assessment</h2>${blockedMarkup(fresh)}`;
+                toast('Passed!');
+                return;
+              }
+              const retry = fresh.canAttempt
+                ? `<div style="margin-top:10px;"><button class="btn-crs btn-crs-outline" id="btnRetake">Retake Assessment (${fresh.attemptsRemaining} left)</button></div>`
+                : `<div class="empty-state" style="margin-top:10px;">${fresh.blockedReason === 'NO_RETAKES' ? 'Retakes are not allowed for this assessment.' : 'No attempts remaining for this assessment.'}</div>`;
+              resultBox.innerHTML = `<div class="crs-assessment-result is-failed">✗ Not passed — score ${result.score}% (passing score ${fresh.passingScore}%)</div>${retry}`;
+              const retakeBtn = document.getElementById('btnRetake');
+              if (retakeBtn) retakeBtn.addEventListener('click', () => loadAssessmentPane(assessmentId));
             } else {
               resultBox.innerHTML = `<div class="form-hint">Attempt submitted — results are released separately for this assessment.</div>`;
             }
-            btn.disabled = true;
           } catch (err) {
             toast(errMsg(err, 'Could not submit attempt.'), 'error');
           } finally {
@@ -261,6 +325,10 @@
           }
         }
 
+        bindSidebar();
+      }
+
+      function bindSidebar() {
         document.querySelectorAll('.crs-player-lesson:not(.crs-player-assessment)').forEach(row => {
           row.addEventListener('click', () => {
             if (row.dataset.locked === '1') { toast('Complete the prior lessons first.', 'error'); return; }
@@ -310,6 +378,7 @@
           </div>`;
 
         renderAll();
+        loadAssessmentStates();
       }
 
       init();

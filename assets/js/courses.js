@@ -1,5 +1,13 @@
 
     document.addEventListener('DOMContentLoaded', async () => {
+
+      // Descriptions are rich text now -- cards show a short plain-text preview.
+      const textPreview = (html, max = 160) => {
+        const d = document.createElement('div');
+        d.innerHTML = html == null ? '' : String(html);
+        const t = (d.textContent || '').replace(/\s+/g, ' ').trim();
+        return (t.length > max ? t.slice(0, max).trimEnd() + '\u2026' : t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      };
       const fmtNaira = (n) => n === 0 ? 'Free' : '₦' + Number(n || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       const toast = (msg, type = 'success') => { if (typeof UIHelper !== 'undefined') UIHelper.showToast(msg, type); };
       const errMsg = (err, fallback) => (err && err.message) ? err.message : fallback;
@@ -15,10 +23,16 @@
       function applyFilters() {
         const category = document.getElementById('categoryFilter').value;
         const level = document.getElementById('levelFilter').value;
-        return coursesCache.filter(c =>
-          (!category || c.category === category) &&
-          (!level || c.level === level)
-        );
+        const keyword = (document.getElementById('keywordSearch').value || '').trim().toLowerCase();
+        return coursesCache.filter(c => {
+          if (category && c.category !== category) return false;
+          if (level && c.level !== level) return false;
+          if (keyword) {
+            const haystack = [c.title, c.shortDescription, c.description, c.category].filter(Boolean).join(' ').toLowerCase();
+            if (!haystack.includes(keyword)) return false;
+          }
+          return true;
+        });
       }
 
       function renderGrid() {
@@ -33,11 +47,12 @@
           const priceLabel = c.status === 'COMING_SOON' ? 'Coming soon' : (price ? fmtNaira(price.amount) : 'Pricing TBC');
           return `
             <div class="crs-card" data-id="${c.id}">
+              ${c.coverImageUrl ? `<img src="${c.coverImageUrl}" alt="" class="crs-card-image" style="width:100%;height:140px;object-fit:cover;border-radius:8px;margin-bottom:10px;">` : ''}
               <div class="crs-card-top">
                 <div class="crs-card-name">${c.title}</div>
                 ${c.category ? `<span class="crs-card-badge">${c.category}</span>` : ''}
               </div>
-              <div class="crs-card-desc">${c.shortDescription || c.description || 'No description provided yet.'}</div>
+              <div class="crs-card-desc">${textPreview(c.shortDescription || c.description) || 'No description provided yet.'}</div>
               <div class="crs-card-meta">
                 <span>${c.level}</span>
                 ${c.duration ? `<span>${c.duration} min</span>` : ''}
@@ -78,6 +93,7 @@
 
       document.getElementById('categoryFilter').addEventListener('change', renderGrid);
       document.getElementById('levelFilter').addEventListener('change', renderGrid);
+      document.getElementById('keywordSearch').addEventListener('input', renderGrid);
 
       loadCourses();
     });

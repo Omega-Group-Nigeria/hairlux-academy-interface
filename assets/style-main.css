@@ -542,6 +542,25 @@ label {
 .w-input[disabled]:not(.w-input-disabled), .w-select[disabled]:not(.w-input-disabled), .w-input[readonly], .w-select[readonly], fieldset[disabled]:not(.w-input-disabled) .w-input, fieldset[disabled]:not(.w-input-disabled) .w-select {
   background-color: #eee;
 }
+[data-theme="dark"] .w-input,
+[data-theme="dark"] .w-select,
+[data-theme="dark"] .text-field {
+  background-color: #20242c;
+  color: #f0ede6;
+  border-color: #30353f;
+}
+[data-theme="dark"] .w-input::placeholder,
+[data-theme="dark"] .w-select::placeholder { color: #a7adb8; }
+[data-theme="dark"] .w-input:focus,
+[data-theme="dark"] .w-select:focus { border-color: #9d8248; }
+[data-theme="dark"] .w-input[disabled]:not(.w-input-disabled),
+[data-theme="dark"] .w-select[disabled]:not(.w-input-disabled),
+[data-theme="dark"] .w-input[readonly],
+[data-theme="dark"] .w-select[readonly],
+[data-theme="dark"] fieldset[disabled]:not(.w-input-disabled) .w-input,
+[data-theme="dark"] fieldset[disabled]:not(.w-input-disabled) .w-select {
+  background-color: #14171c;
+}
 
 textarea.w-input, textarea.w-select {
   height: auto;
@@ -3237,6 +3256,76 @@ body {
   background-color: #fff;
   font-family: Bdogrotesk Vf, sans-serif;
   line-height: 1.5;
+}
+
+
+/* ── Light/dark mode: nav chrome (shared across every page that loads this file) ── */
+.theme-toggle-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: var(--dim-grey, #303a46);
+  margin-right: 4px;
+  transition: background .16s;
+}
+.theme-toggle-btn:hover { background: rgba(0, 0, 0, .06); }
+.theme-toggle-btn .icon-moon { display: none; }
+[data-theme="dark"] .theme-toggle-btn .icon-sun { display: none; }
+[data-theme="dark"] .theme-toggle-btn .icon-moon { display: inline-block; }
+[data-theme="dark"] .theme-toggle-btn { color: #000; }
+
+[data-theme="dark"] .nav-link,
+[data-theme="dark"] .nav-link.w--current { color: #000; }
+[data-theme="dark"] .nav-link:hover { color: #ffffffbf; background-color: #ffffff1a; }
+[data-theme="dark"] .w-dropdown-list { background: #1c2027; }
+[data-theme="dark"] .dropdown-link { background-color: #1c2027; color: #e8eaed; }
+[data-theme="dark"] .dropdown-link:hover { background-color: #2a2f38; }
+[data-theme="dark"] .dropdown-link.w--current { color: #ffffffcb; background-color: #2a2f38; }
+[data-theme="dark"] .top-profile-name { color: #e8eaed; }
+[data-theme="dark"] .top-profile-link { color: #a7adb8; }
+/* Generic Webflow "dark text" variables used sitewide for headings/body copy --
+   flip them for dark mode so text doesn't sit low-contrast on the new dark
+   backgrounds. (--dark-gray, --main-green, --mid-green stay untouched: those
+   are genuinely dual-use as both text and background elsewhere in this file.) */
+:root[data-theme="dark"] {
+  --dim-grey: #e8eaed;
+  --gray-800: #d6d8db;
+  --gray-700: #a7adb8;
+}
+[data-theme="dark"] .quantity-field { background-color: #303a46; }
+[data-theme="dark"] .button-regular:hover { background-color: #303a46; }
+/* Mobile/tablet nav dropdown panel (<=991px, matches Webflow's own .nav-menu
+   breakpoint) -- was a near-white panel regardless of theme; darken it so
+   the (already-light) nav link text stays readable against it. */
+@media screen and (max-width: 991px) {
+  [data-theme="dark"] .nav-menu {
+    background-color: #1c2027d6;
+    border-color: #30353f;
+  }
+}
+/* Main banner image (index.html hero) -- darken it in dark mode with a
+   translucent black overlay layered under the existing photo, so the
+   (light-colored, in dark mode) hero heading/paragraph read clearly
+   against it. Webflow applies this as a single background-image, so the
+   overlay is added as a second background layer rather than a new element. */
+[data-theme="dark"] .sub-hero-image {
+  background-image: linear-gradient(rgba(10, 12, 10, .55), rgba(10, 12, 10, .55)), url("img/hero-bg.webp");
+}
+/* Banner heading/paragraph (index.html hero) -- both carry an inline
+   text-shadow: 0 0 ... rgba(255,255,255,...) glow written for the light
+   photo behind them, plus inherited dark (--dim-grey) text color. In dark
+   mode, force plain white text and drop the (now backwards) white glow;
+   !important is required to beat the inline style= attributes in the HTML. */
+[data-theme="dark"] .content-hero .h-xxl,
+[data-theme="dark"] .content-description-hero .p-m.normal {
+  color: #fff !important;
+  text-shadow: none !important;
 }
 
 h1 {

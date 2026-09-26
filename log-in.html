@@ -20,6 +20,7 @@
   <meta content="width=device-width, initial-scale=1" name="viewport" />
   <link href="assets/style-main.css" rel="stylesheet" type="text/css" />
   <link href="assets/toast.css" rel="stylesheet" type="text/css" />
+  <script src="assets/js/theme-toggle.js"></script>
   <link href="https://fonts.googleapis.com/" rel="preconnect" />
   <link href="https://fonts.gstatic.com/" rel="preconnect" crossorigin="anonymous" />
   <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -94,7 +95,13 @@
       display: flex;
       justify-content: center;
     }
-  </style>
+  
+[data-theme="dark"] .password-toggle-btn { color: #a7adb8; }
+[data-theme="dark"] .auth-divider { color: #a7adb8; }
+[data-theme="dark"] .auth-divider::before,
+[data-theme="dark"] .auth-divider::after { background: #30353f; }
+
+    </style>
   <!--Start of Tawk.to Script-->
   <script type="text/javascript">
     var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
@@ -125,6 +132,10 @@
           <div>Login/Signup</div>
         </a>
       </nav>
+      <button type="button" class="theme-toggle-btn" data-theme-toggle aria-pressed="false" title="Switch to dark mode" aria-label="Toggle dark mode">
+        <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
+        <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
       <div class="menu-button w-nav-button">
         <div class="menu-mobile">
           <div data-is-ix2-target="1" class="lottie-animation" data-w-id="9ddc847f-f377-4e52-c9e3-c93ed393def0"

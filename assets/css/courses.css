@@ -20,6 +20,60 @@
       --info: #2551a8;
       --info-bg: #eef2fb;
     }
+    :root[data-theme="dark"] {
+      --card-bg: #1c2027;
+      --surface: #14171c;
+      --surface-2: #20242c;
+      --primary: #f0ede6;
+      --primary-d: #ffffff;
+      --primary-light: rgba(201, 168, 114, .16);
+      --muted: #a7adb8;
+      --border: #30353f;
+      --shadow-soft: 0 6px 22px rgba(0, 0, 0, .35);
+      --danger: #ff8a80;
+      --danger-bg: rgba(192, 57, 43, .18);
+      --success: #6fcf97;
+      --success-bg: rgba(26, 110, 56, .18);
+      --warn: #e8c468;
+      --warn-bg: rgba(138, 109, 26, .18);
+      --info: #7ea6f2;
+      --info-bg: rgba(37, 81, 168, .2);
+    }
+
+    /* Literal (non-variable) colors from the rules below, patched for dark mode. */
+    [data-theme="dark"] .crs-card-price,
+    [data-theme="dark"] .crs-purchase-price,
+    [data-theme="dark"] .crs-summary-box .crs-summary-price { color: var(--primary); }
+    [data-theme="dark"] .top-profile,
+    [data-theme="dark"] .profile-list { background: var(--card-bg); }
+    [data-theme="dark"] .crs-module-head,
+    [data-theme="dark"] .crs-player-module-head { background: var(--surface-2); }
+    [data-theme="dark"] .crs-detail-desc,
+    [data-theme="dark"] .crs-detail-block p,
+    [data-theme="dark"] .crs-review-text,
+    [data-theme="dark"] .crs-text-lesson,
+    [data-theme="dark"] .crs-player-lesson { color: var(--muted); }
+    [data-theme="dark"] .form-group label { color: #d7dbe1; }
+    [data-theme="dark"] .form-group input[type="text"],
+    [data-theme="dark"] .form-group input[type="email"],
+    [data-theme="dark"] .form-group textarea {
+      background: var(--surface-2); border-color: var(--border); color: var(--primary);
+    }
+    [data-theme="dark"] .form-group input:focus,
+    [data-theme="dark"] .form-group textarea:focus { background: var(--card-bg); }
+    [data-theme="dark"] .crs-filter-bar select,
+    [data-theme="dark"] .btn-crs-outline,
+    [data-theme="dark"] .btn-apply-code,
+    [data-theme="dark"] .btn-cancel,
+    [data-theme="dark"] .crs-tab { background: var(--card-bg); color: var(--primary); border-color: var(--border); }
+    [data-theme="dark"] .modal-box { background: var(--card-bg); border-color: var(--border); }
+    [data-theme="dark"] .crs-media-wrap { background: #000; }
+    [data-theme="dark"] .theme-toggle-btn:hover { background: rgba(255,255,255,.08); }
+[data-theme="dark"] .btn-crs-primary { color: #000; }
+[data-theme="dark"] .crs-tab.is-active { color: #000; }
+[data-theme="dark"] .btn-save { color: #000; }
+[data-theme="dark"] .crs-section-sub a { color: #fff; }
+
 
     body {
       background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%) !important;
@@ -155,7 +209,14 @@
     }
     .crs-detail-hero h1 { margin: 0 0 8px; font-size: 24px; color: var(--primary); }
     .crs-detail-meta-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
-    .crs-detail-desc { font-size: 13.5px; color: #374151; line-height: 1.65; white-space: pre-line; }
+    .crs-detail-desc { font-size: 13.5px; color: #374151; line-height: 1.65; }
+    .crs-rich > :first-child { margin-top: 0; }
+    .crs-rich > :last-child { margin-bottom: 0; }
+    .crs-rich p { margin: 0 0 8px; }
+    .crs-rich ul, .crs-rich ol { margin: 0 0 8px; padding-left: 20px; }
+    .crs-rich h1, .crs-rich h2, .crs-rich h3 { margin: 12px 0 6px; line-height: 1.3; }
+    .crs-rich h1 { font-size: 18px; } .crs-rich h2 { font-size: 16px; } .crs-rich h3 { font-size: 14.5px; }
+    .crs-rich a { color: var(--info); text-decoration: underline; }
     .crs-detail-block { margin-top: 16px; }
     .crs-detail-block h4 { margin: 0 0 6px; font-size: 13px; color: var(--primary); }
     .crs-detail-block p { margin: 0; font-size: 13px; color: #374151; line-height: 1.6; white-space: pre-line; }
@@ -246,6 +307,7 @@
     .crs-media-wrap iframe { height: 480px; }
     .crs-media-wrap audio { width: 100%; display: block; margin: 18px; }
     .crs-text-lesson { font-size: 14px; color: #374151; line-height: 1.75; white-space: pre-line; }
+    .crs-text-lesson.crs-rich { white-space: normal; }
     .crs-resources { margin-top: 18px; padding-top: 16px; border-top: 1px dashed var(--border); }
     .crs-resources h4 { margin: 0 0 8px; font-size: 12.5px; color: var(--primary); }
     .crs-resources a { display: block; font-size: 12.5px; color: var(--info); margin-bottom: 4px; text-decoration: underline; }

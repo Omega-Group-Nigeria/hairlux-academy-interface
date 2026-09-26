@@ -14,6 +14,39 @@
       --danger:      #c0392b;
       --danger-bg:   #fdf2f2;
     }
+    :root[data-theme="dark"] {
+      --card-bg: #1c2027;
+      --surface: #14171c;
+      --surface-2: #20242c;
+      --primary: #f0ede6;
+      --muted: #a7adb8;
+      --border: #30353f;
+      --shadow-soft: 0 6px 22px rgba(0, 0, 0, .35);
+      --danger: #ff8a80;
+      --danger-bg: rgba(192, 57, 43, .18);
+    }
+
+    /* Literal (non-variable) colors from the rules above, patched for dark mode. */
+    [data-theme="dark"] .profile-list,
+    [data-theme="dark"] .top-profile { background: var(--card-bg); }
+    [data-theme="dark"] .profile-panel { border-color: var(--border); }
+    [data-theme="dark"] .panel-header { border-bottom-color: var(--border); }
+    [data-theme="dark"] .panel-icon { background: rgba(157, 130, 72, .16); }
+    [data-theme="dark"] .form-group label { color: var(--primary); }
+    [data-theme="dark"] .form-group input {
+      background: var(--surface-2); color: var(--primary); border-color: var(--border);
+    }
+    [data-theme="dark"] .form-group input:focus { background: var(--card-bg); }
+    [data-theme="dark"] .form-group input:read-only {
+      background: var(--surface); color: var(--muted); border-color: var(--border);
+    }
+    [data-theme="dark"] .btn-cancel-edit { background: var(--card-bg); color: var(--primary); }
+    [data-theme="dark"] .btn-edit-toggle { background: rgba(157, 130, 72, .16); }
+    [data-theme="dark"] .skel-line {
+      background: linear-gradient(90deg, #262b33 25%, #2f3540 50%, #262b33 75%);
+      background-size: 400% 100%;
+    }
+
 
     body {
       background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%) !important;
