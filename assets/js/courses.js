@@ -9,6 +9,15 @@
         return (t.length > max ? t.slice(0, max).trimEnd() + '\u2026' : t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
       };
       const fmtNaira = (n) => n === 0 ? 'Free' : '₦' + Number(n || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      // Promotional or discounted price shown against the normal fee, struck
+      // through (the API resolves which applies -- promotional supersedes discounted).
+      const priceHtml = (p) => {
+        if (!p) return 'Pricing TBC';
+        if (p.originalAmount == null || p.originalAmount <= p.amount) return fmtNaira(p.amount);
+        const pct = Math.round((1 - p.amount / p.originalAmount) * 100);
+        return `<s class="crs-price-was">${fmtNaira(p.originalAmount)}</s> <span class="crs-price-now">${fmtNaira(p.amount)}</span>`
+          + (pct > 0 ? ` <span class="crs-price-save">${p.priceType === 'PROMOTIONAL' ? 'Promo ' : ''}-${pct}%</span>` : '');
+      };
       const toast = (msg, type = 'success') => { if (typeof UIHelper !== 'undefined') UIHelper.showToast(msg, type); };
       const errMsg = (err, fallback) => (err && err.message) ? err.message : fallback;
 
@@ -44,7 +53,7 @@
         }
         grid.innerHTML = filtered.map(c => {
           const price = c.currentPrice;
-          const priceLabel = c.status === 'COMING_SOON' ? 'Coming soon' : (price ? fmtNaira(price.amount) : 'Pricing TBC');
+          const priceLabel = c.status === 'COMING_SOON' ? 'Coming soon' : priceHtml(price);
           return `
             <div class="crs-card" data-id="${c.id}">
               ${c.coverImageUrl ? `<img src="${c.coverImageUrl}" alt="" class="crs-card-image" style="width:100%;height:140px;object-fit:cover;border-radius:8px;margin-bottom:10px;">` : ''}

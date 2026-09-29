@@ -66,6 +66,19 @@ const AcademyTrainingAPI = {
   },
 
   /**
+   * The calling learner's own in-branch registrations (My Training page),
+   * newest first. Each row already carries a `stage` (PENDING_PAYMENT,
+   * WAITLISTED, UPCOMING, IN_PROGRESS, COMPLETED, CLOSED), the cohort and
+   * branch, schedule (next session), attendance and module progress.
+   * @returns {Promise<Array>}
+   */
+  async listMyRegistrations() {
+    const res = await APIHelper.request(API_CONFIG.ENDPOINTS.ACADEMY_TRAINING.REGISTRATIONS, { method: 'GET' });
+    const d = (res && res.data) ? res.data : res;
+    return Array.isArray(d) ? d : [];
+  },
+
+  /**
    * Fetch full registration detail (cohort, training, order+payment,
    * identity verification) for the calling user's own registration.
    * @param {string} registrationId

@@ -351,7 +351,7 @@
           }
         }
 
-        body += `<div class="form-hint" style="margin-top:12px;">Kept only for this browser session — use "Check Registration Status" below any time.</div>`;
+        body += `<div class="form-hint" style="margin-top:12px;">All your registrations are in <a href="app/my-training.html">My Training</a>. You can also use "Check Registration Status" below any time.</div>`;
         panel.innerHTML = body;
 
         const verifyBtn = document.getElementById('btnVerifyPayment');
@@ -499,6 +499,16 @@
       // ── Init ─────────────────────────────────────────────────────
       renderRegPanelFromState();
       await handlePaymentReturn();
+
+      // Deep link from My Training: training.html?registration=<id> opens that
+      // registration's panel (payment check, identity verification, ID card,
+      // certificate) -- the same panel a fresh registration uses.
+      const linkedRegistrationId = new URLSearchParams(window.location.search).get('registration');
+      if (linkedRegistrationId) {
+        await refreshRegistrationDetail(linkedRegistrationId);
+        const regPanel = document.getElementById('regPanel');
+        if (regPanel && regPanel.style.display !== 'none') regPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
       const trainingSearchInput = document.getElementById('trainingSearch');
       if (trainingSearchInput) trainingSearchInput.addEventListener('input', renderTrainingsGrid);
 

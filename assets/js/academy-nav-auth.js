@@ -62,6 +62,7 @@
               <a href="courses.html" class="dropdown-link w-dropdown-link">Digital Courses</a>
               <a href="training.html" class="dropdown-link w-dropdown-link">In-Branch Training</a>
               <a href="app/my-courses.html" class="dropdown-link w-dropdown-link">My Courses</a>
+              <a href="app/my-training.html" class="dropdown-link w-dropdown-link">My Training</a>
               <a href="app/profile.html" class="dropdown-link w-dropdown-link">My Profile</a>
               <a href="#" id="navLogoutBtn" class="dropdown-link w-dropdown-link">Logout</a>
             </nav>

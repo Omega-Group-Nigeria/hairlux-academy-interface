@@ -1,0 +1,28 @@
+{
+  "id": "./index.html",
+  "name": "Hairlux Academy",
+  "short_name": "HX Academy",
+  "description": "Learn hair and beauty with Hairlux Academy — digital courses, in-branch training, free resources and your certificates, all in one app.",
+  "start_url": "./index.html?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#2E2E2E",
+  "theme_color": "#ffffff",
+  "lang": "en-NG",
+  "dir": "ltr",
+  "categories": ["education", "beauty", "lifestyle"],
+  "icons": [
+    { "src": "assets/img/pwa/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/img/pwa/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/img/pwa/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "assets/img/pwa/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "My Courses", "url": "./app/my-courses.html?source=pwa-shortcut", "icons": [{ "src": "assets/img/pwa/icon-maskable-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "My Training", "url": "./app/my-training.html?source=pwa-shortcut", "icons": [{ "src": "assets/img/pwa/icon-maskable-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "Browse Courses", "short_name": "Courses", "url": "./courses.html?source=pwa-shortcut", "icons": [{ "src": "assets/img/pwa/icon-maskable-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "Free Resources", "short_name": "Resources", "url": "./resources.html?source=pwa-shortcut", "icons": [{ "src": "assets/img/pwa/icon-maskable-192.png", "sizes": "192x192", "type": "image/png" }] }
+  ]
+}

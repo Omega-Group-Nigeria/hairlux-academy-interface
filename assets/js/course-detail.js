@@ -1,6 +1,15 @@
 
     document.addEventListener('DOMContentLoaded', async () => {
       const fmtNaira = (n) => n === 0 ? 'Free' : '₦' + Number(n || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      // Promotional or discounted price shown against the normal fee, struck
+      // through (the API resolves which applies -- promotional supersedes discounted).
+      const priceHtml = (p) => {
+        if (!p) return 'Pricing TBC';
+        if (p.originalAmount == null || p.originalAmount <= p.amount) return fmtNaira(p.amount);
+        const pct = Math.round((1 - p.amount / p.originalAmount) * 100);
+        return `<s class="crs-price-was">${fmtNaira(p.originalAmount)}</s> <span class="crs-price-now">${fmtNaira(p.amount)}</span>`
+          + (pct > 0 ? ` <span class="crs-price-save">${p.priceType === 'PROMOTIONAL' ? 'Promo ' : ''}-${pct}%</span>` : '');
+      };
       const fmtDate = (iso) => {
         if (!iso) return '—';
         const d = new Date(iso);
@@ -166,13 +175,13 @@
         if (expired) {
           return `<div class="crs-purchase-box">
             <span class="crs-pill crs-pill-EXPIRED">Access Expired</span>
-            <div class="crs-purchase-price" style="margin-top:12px;">${price ? fmtNaira(price.amount) : 'Pricing TBC'}</div>
+            <div class="crs-purchase-price" style="margin-top:12px;">${priceHtml(price)}</div>
             <button class="btn-crs btn-crs-primary btn-crs-block" style="margin-top:16px;" id="btnEnroll">Enroll Again</button>
           </div>`;
         }
 
         return `<div class="crs-purchase-box">
-          <div class="crs-purchase-price">${price ? fmtNaira(price.amount) : 'Pricing TBC'}</div>
+          <div class="crs-purchase-price">${priceHtml(price)}</div>
           <div class="crs-purchase-meta">
             <span>${course.accessType === 'LIFETIME' ? 'Lifetime access' : course.accessType === 'FIXED_DAYS' ? `${course.accessDurationDays}-day access` : 'Limited-time access'}</span>
             ${course.certificateEnabled ? '<span>🎓 Certificate on completion</span>' : ''}
@@ -274,7 +283,7 @@
         const price = course.currentPrice;
         purchaseSummary.innerHTML = `
           <div><strong>${esc(course.title)}</strong></div>
-          <div class="crs-summary-price" id="purchasePrice" style="margin-top:8px;">${price ? fmtNaira(price.amount) : 'Pricing TBC'}</div>`;
+          <div class="crs-summary-price" id="purchasePrice" style="margin-top:8px;">${priceHtml(price)}</div>`;
         document.getElementById('purchaseTitle').textContent = (price && price.amount === 0) ? 'Enroll for Free' : 'Enroll';
         purchaseSubmit.textContent = (price && price.amount === 0) ? 'Confirm Free Enrollment' : 'Confirm Enrollment';
         purchaseOverlay.classList.add('open');
@@ -294,7 +303,13 @@
           appliedDiscount = { code, ...result };
           discountHint.textContent = `${result.name || code}: −${fmtNaira(result.discountAmount)} — you pay ${fmtNaira(result.finalAmount)}`;
           const priceEl = document.getElementById('purchasePrice');
-          if (priceEl) priceEl.textContent = fmtNaira(result.finalAmount);
+          // Keep the normal fee struck through, now against the final amount after the code.
+          if (priceEl) {
+            const was = price && price.originalAmount != null ? price.originalAmount : (price ? price.amount : null);
+            priceEl.innerHTML = was != null && was > result.finalAmount
+              ? `<s class="crs-price-was">${fmtNaira(was)}</s> <span class="crs-price-now">${fmtNaira(result.finalAmount)}</span>`
+              : fmtNaira(result.finalAmount);
+          }
         } catch (err) {
           appliedDiscount = null;
           discountError.textContent = errMsg(err, 'That code is not valid.');
