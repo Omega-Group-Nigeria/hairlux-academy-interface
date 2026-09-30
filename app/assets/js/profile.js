@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', async function () {
+  if (typeof APIHelper !== 'undefined' && !APIHelper.isAuthenticated()) return; // app-auth.js is redirecting to log in
 
   // ── Refs ───────────────────────────────────────────────────────
   const heroAvatar = document.getElementById('heroAvatar');

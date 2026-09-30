@@ -21,9 +21,29 @@
       // Description/requirements/objectives/do's/don'ts are rich text from the
       // admin editor, sanitised server-side (sanitizeRichText). Older plain-text
       // values are escaped instead, keeping their line breaks.
+      // Client-side belt-and-braces over the server's sanitizeRichText: parse
+      // in an inert <template> (nothing loads or runs), drop active elements,
+      // on* handlers, inline styles and javascript:/data: URLs.
+      const sanitizeHtml = (html) => {
+        const tpl = document.createElement('template');
+        tpl.innerHTML = String(html == null ? '' : html);
+        tpl.content.querySelectorAll('script,style,iframe,frame,object,embed,link,meta,base,form,input,button,textarea,select,svg,math').forEach((n) => n.remove());
+        tpl.content.querySelectorAll('*').forEach((el) => {
+          Array.from(el.attributes).forEach((a) => {
+            const name = a.name.toLowerCase();
+            const val = String(a.value || '').replace(/[\u0000-\u0020]/g, '').toLowerCase();
+            if (name.startsWith('on') || name === 'style' || name === 'srcdoc'
+              || (['href', 'src', 'xlink:href', 'action', 'formaction'].includes(name) && /^(javascript|vbscript|data):/.test(val))) {
+              el.removeAttribute(a.name);
+            }
+          });
+          if (el.tagName === 'A') { el.setAttribute('target', '_blank'); el.setAttribute('rel', 'noopener noreferrer'); }
+        });
+        return tpl.innerHTML;
+      };
       const richText = (s) => {
         const v = s == null ? '' : String(s);
-        return /<\/?[a-z][\s\S]*>/i.test(v) ? v : esc(v).replace(/\n/g, '<br>');
+        return /<\/?[a-z][\s\S]*>/i.test(v) ? sanitizeHtml(v) : esc(v).replace(/\n/g, '<br>');
       };
 
       const STATE_KEY = 'hairlux_academy_course_pending';
@@ -41,9 +61,13 @@
       const clearState = () => { try { window.sessionStorage.removeItem(STATE_KEY); } catch (_) {} };
       const cleanCallbackQuery = () => {
         if (window.history && typeof window.history.replaceState === 'function') {
-          window.history.replaceState({}, document.title, window.location.pathname + window.location.search.replace(/[?&](trxref|reference)=[^&]*/g, '').replace(/^&/, '?'));
+          const q = new URLSearchParams(window.location.search);
+          ['trxref', 'reference', 'order'].forEach((k) => q.delete(k));
+          const qs = q.toString();
+          window.history.replaceState({}, document.title, window.location.pathname + (qs ? `?${qs}` : ''));
         }
       };
+      const isLoggedIn = () => typeof APIHelper !== 'undefined' && APIHelper.isAuthenticated();
 
       const params = new URLSearchParams(window.location.search);
       const courseId = params.get('id');
@@ -242,15 +266,18 @@
           root.innerHTML = `<div class="empty-state">${errMsg(err, 'Course not found.')}</div>`;
           return false;
         }
-        try {
-          const access = await AcademyCoursesAPI.listMyAccess();
-          myAccessEntry = (access || []).find(a => a.access.courseId === courseId) || null;
-        } catch (_) { myAccessEntry = null; }
+        myAccessEntry = null;
+        if (isLoggedIn()) {
+          try {
+            const access = await AcademyCoursesAPI.listMyAccess();
+            myAccessEntry = (access || []).find(a => a.access.courseId === courseId) || null;
+          } catch (_) { myAccessEntry = null; }
+        }
         try {
           reviews = await AcademyCoursesAPI.listReviews(courseId);
         } catch (_) { reviews = []; }
         myCertificate = null;
-        if (myAccessEntry && myAccessEntry.bucket === 'COMPLETED' && course.certificateEnabled) {
+        if (isLoggedIn() && myAccessEntry && myAccessEntry.bucket === 'COMPLETED' && course.certificateEnabled) {
           try {
             const certs = await AcademyCoursesAPI.listMyCertificates();
             myCertificate = (certs || []).find(c => c.programType === 'COURSE' && c.programId === courseId && c.status === 'ISSUED') || null;
@@ -323,6 +350,8 @@
         try {
           const result = await AcademyCoursesAPI.purchase(courseId, appliedDiscount ? appliedDiscount.code : undefined);
           if (result.authorizationUrl) {
+            // Paystack returns to course-detail.html?id=..&order=..&reference=..
+            // (callback URL set server-side); this state is only a fallback.
             saveState({ courseId, orderId: result.order.id, createdAt: Date.now() });
             toast('Redirecting to Paystack to complete payment…');
             window.location.href = result.authorizationUrl;
@@ -383,21 +412,80 @@
       });
 
       // ── Payment return ───────────────────────────────────────────
+      // Paystack sends the customer back to
+      // course-detail.html?id=<course>&order=<orderId>&trxref=<ref>&reference=<ref>
+      // (callback URL set by the API on purchase). The order is verified
+      // server-side with the gateway, which grants access idempotently --
+      // the Paystack webhook does the same if the customer never returns.
+      const paymentStatusEl = (() => {
+        let el = document.getElementById('paymentStatus');
+        if (!el) {
+          el = document.createElement('div');
+          el.id = 'paymentStatus';
+          root.parentNode.insertBefore(el, root);
+        }
+        el.className = 'crs-pay-status';
+        el.style.display = 'none';
+        return el;
+      })();
+
+      function showPaymentStatus(kind, title, message, actions) {
+        paymentStatusEl.className = `crs-pay-status crs-pay-status-${kind}`;
+        paymentStatusEl.setAttribute('role', kind === 'error' ? 'alert' : 'status');
+        paymentStatusEl.innerHTML = `
+          <div class="crs-pay-status-icon">${kind === 'success' ? '✓' : kind === 'error' ? '!' : '…'}</div>
+          <div class="crs-pay-status-body">
+            <div class="crs-pay-status-title">${esc(title)}</div>
+            ${message ? `<div class="crs-pay-status-msg">${esc(message)}</div>` : ''}
+            ${actions ? `<div class="crs-pay-status-actions">${actions}</div>` : ''}
+          </div>`;
+        paymentStatusEl.style.display = '';
+        paymentStatusEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+
+      async function verifyOrder(orderId) {
+        showPaymentStatus('pending', 'Confirming your payment…', 'Please wait while we confirm your payment with Paystack.');
+        try {
+          await AcademyCoursesAPI.verifyPayment(orderId);
+          clearState();
+          showPaymentStatus('success', 'Payment successful — you\'re enrolled!', 'Your access to this course is now active.',
+            `<a class="btn-crs btn-crs-primary" href="${playerUrl()}">Start Learning</a> <a class="btn-crs btn-crs-outline" href="app/my-courses.html">My Courses</a>`);
+          toast('Payment verified — access granted!');
+          return true;
+        } catch (err) {
+          if (err && err.status === 401) return false; // session expired -- APIHelper is redirecting to log in
+          const notYet = /not been completed/i.test((err && err.message) || '');
+          showPaymentStatus(notYet ? 'pending' : 'error',
+            notYet ? 'Payment not completed yet' : 'We couldn\'t confirm your payment',
+            errMsg(err, 'Payment could not be verified.') + (notYet ? '' : ' If you were charged, your access will be activated automatically once Paystack confirms it — or contact Hairlux Academy with your payment reference.'),
+            `<button type="button" class="btn-crs btn-crs-primary" id="btnRecheckPayment">Check Again</button>`);
+          const recheck = document.getElementById('btnRecheckPayment');
+          if (recheck) recheck.addEventListener('click', async () => {
+            if (await verifyOrder(orderId)) await loadAll();
+          });
+          return false;
+        }
+      }
+
       async function handlePaymentReturn() {
         const query = new URLSearchParams(window.location.search);
         const reference = query.get('trxref') || query.get('reference') || '';
         const state = readState();
-        if (!reference || !state || state.courseId !== courseId) return;
-        cleanCallbackQuery();
-        try {
-          await AcademyCoursesAPI.verifyPayment(state.orderId);
-          toast('Payment verified — access granted!');
-        } catch (err) {
-          toast(errMsg(err, 'Could not verify payment automatically.'), 'error');
+        const orderId = query.get('order') || (reference && state && state.courseId === courseId ? state.orderId : '');
+        if (!orderId) return;
+
+        // Session lost while on Paystack -- log in first, then come straight
+        // back here with the same order/reference so verification still runs.
+        if (!isLoggedIn()) {
+          const returnTo = `course-detail.html${window.location.search}`;
+          window.location.replace(`log-in.html?returnTo=${encodeURIComponent(returnTo)}`);
+          return 'redirecting';
         }
-        clearState();
+
+        cleanCallbackQuery();
+        await verifyOrder(orderId);
       }
 
-      await handlePaymentReturn();
+      if (await handlePaymentReturn() === 'redirecting') return;
       await loadAll();
     });

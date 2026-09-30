@@ -13,9 +13,8 @@
 
     const loginPage = '../log-in.html';
 
-    // Protect app pages: require existing auth state
-    if (!APIHelper.isAuthenticated()) {
-      window.location.href = loginPage;
+    // Protect app pages: require existing auth state (returns here after log in)
+    if (!APIHelper.requireAuth()) {
       return;
     }
 

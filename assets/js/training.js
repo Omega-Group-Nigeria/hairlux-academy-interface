@@ -1,5 +1,15 @@
+// training.html is public: guests browse and check registration status.
+window.HAIRLUX_PUBLIC_PAGE = true;
 
     document.addEventListener('DOMContentLoaded', async () => {
+      // Public page: guests can browse programmes/cohorts and use "Check
+      // Registration Status". Only the signed-in parts (pending registration,
+      // payment verify, my registrations/certificates) are skipped for guests;
+      // account-only actions send them to log in at that moment.
+      const isLoggedIn = () => typeof APIHelper !== 'undefined' && APIHelper.isAuthenticated();
+      const goToLogin = (returnTo) => {
+        window.location.href = `log-in.html?returnTo=${encodeURIComponent(returnTo || ('training.html' + window.location.search))}`;
+      };
 
       // Descriptions are rich text now -- cards show a short plain-text preview.
       const textPreview = (html, max = 160) => {
@@ -16,6 +26,9 @@
         return d.toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' });
       };
       const toast = (msg, type = 'success') => {
+        // A 401 means the session ended mid-page and APIHelper is already
+        // redirecting to log in -- don't flash an error on the way out.
+        if (typeof APIHelper !== 'undefined' && APIHelper.redirectingToLogin) return;
         if (typeof UIHelper !== 'undefined') UIHelper.showToast(msg, type);
       };
       const errMsg = (err, fallback) => (err && err.message) ? err.message : fallback;
@@ -189,9 +202,8 @@
       const registerSubmit   = document.getElementById('registerSubmit');
 
       function openRegisterModal(cohort) {
-        if (typeof APIHelper !== 'undefined' && !APIHelper.isAuthenticated()) {
-          const returnTo = `training.html?training=${encodeURIComponent(selectedTrainingId || '')}&cohort=${encodeURIComponent(cohort.id)}`;
-          window.location.href = `log-in.html?returnTo=${encodeURIComponent(returnTo)}`;
+        if (!isLoggedIn()) {
+          goToLogin(`training.html?training=${encodeURIComponent(selectedTrainingId || '')}&cohort=${encodeURIComponent(cohort.id)}`);
           return;
         }
         selectedCohort = cohort;
@@ -331,27 +343,35 @@
             body += `<div class="trn-reg-line" style="color:var(--success);font-weight:600;">🎓 Certificate earned — ${cachedCertificate.certificateNumber}</div>`;
             body += `<div class="trn-reg-actions"><a class="btn-trn btn-trn-primary" href="${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ACADEMY_COMMERCE.CERTIFICATES}/${encodeURIComponent(cachedCertificate.certificateNumber)}/download" target="_blank" rel="noopener">Download Certificate (PDF)</a></div>`;
           }
+          const escA = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
           if (idStatus === 'VERIFIED') {
             body += `<div class="trn-reg-line">Identity verification: <span class="trn-pill trn-pill-VERIFIED">VERIFIED</span></div>`;
+            const confirmed = [state.nameFirst, state.nameLast].filter(Boolean).join(' ');
+            if (confirmed) body += `<div class="trn-reg-line">Name on your certificate &amp; ID card: <strong>${escA(confirmed)}</strong></div>`;
           } else {
+            // Prefill: last attempt / registration's name, else the signed-in profile.
+            const profile = (typeof APIHelper !== 'undefined' && APIHelper.getUserData && APIHelper.getUserData()) || {};
+            const preFirst = state.nameFirst || profile.firstName || '';
+            const preLast = state.nameLast || profile.lastName || '';
             if (idStatus === 'FAILED') {
               body += `<div class="trn-reg-line" style="color:var(--danger,#c0392b);font-weight:600;">Identity verification failed — please double-check your NIN and name, then try again.</div>`;
             }
             body += `
               <form id="identityForm" class="trn-id-form" novalidate>
                 <div class="form-hint">Verify your identity with your NIN to complete registration.</div>
+                <div class="form-group"><label for="idNin">NIN (11 digits)</label><input type="text" id="idNin" maxlength="11" inputmode="numeric" autocomplete="off" required /></div>
                 <div class="trn-id-row">
-                  <div class="form-group"><label for="idFirstName">First Name</label><input type="text" id="idFirstName" required /></div>
-                  <div class="form-group"><label for="idLastName">Last Name</label><input type="text" id="idLastName" required /></div>
+                  <div class="form-group"><label for="idFirstName">First Name</label><input type="text" id="idFirstName" autocomplete="given-name" value="${escA(preFirst)}" required /></div>
+                  <div class="form-group"><label for="idLastName">Last Name</label><input type="text" id="idLastName" autocomplete="family-name" value="${escA(preLast)}" required /></div>
                 </div>
-                <div class="form-group"><label for="idNin">NIN (11 digits)</label><input type="text" id="idNin" maxlength="11" required /></div>
+                <div class="form-hint">Prefilled from your profile — edit to match the name on your NIN if needed. The name you confirm here is used on your certificate and ID card for this training.</div>
                 <div class="form-error" id="idError"></div>
                 <div><button type="submit" class="btn-trn btn-trn-primary" id="idSubmit">Verify Identity</button></div>
               </form>`;
           }
         }
 
-        body += `<div class="form-hint" style="margin-top:12px;">All your registrations are in <a href="app/my-training.html">My Training</a>. You can also use "Check Registration Status" below any time.</div>`;
+        body += `<div class="form-hint" style="margin-top:12px;">All your registrations are in <a href="app/my-training.html">My Training</a>. You can also use "Check Registration Status" above any time.</div>`;
         panel.innerHTML = body;
 
         const verifyBtn = document.getElementById('btnVerifyPayment');
@@ -381,14 +401,19 @@
               idError.classList.add('is-visible');
               return;
             }
+            const firstName = document.getElementById('idFirstName').value.trim();
+            const lastName = document.getElementById('idLastName').value.trim();
+            if (!firstName || !lastName) {
+              idError.textContent = 'Enter your first and last name as they appear on your NIN.';
+              idError.classList.add('is-visible');
+              return;
+            }
             const idSubmit = document.getElementById('idSubmit');
             UIHelper.setButtonLoading(idSubmit, true);
             try {
-              const idResult = await AcademyTrainingAPI.verifyIdentity(state.registrationId, {
-                nin,
-                firstName: document.getElementById('idFirstName').value.trim(),
-                lastName: document.getElementById('idLastName').value.trim()
-              });
+              const idResult = await AcademyTrainingAPI.verifyIdentity(state.registrationId, { nin, firstName, lastName });
+              // Keep what they typed so a failed attempt re-renders with it.
+              saveState({ ...(readState() || state), nameFirst: firstName, nameLast: lastName });
               await refreshRegistrationDetail(state.registrationId);
               if (idResult && idResult.status === 'VERIFIED') {
                 toast('Identity verified!');
@@ -414,12 +439,22 @@
             registrationCode: reg.registrationCode,
             status: reg.status,
             identityStatus: reg.identityVerification ? reg.identityVerification.status : null,
+            // applicant.* is the confirmed (NIN-verified) name once verified,
+            // else the profile name; a just-typed failed attempt wins over the profile.
+            nameFirst: (reg.applicant && reg.applicant.nameVerified) ? reg.applicant.firstName : ((state.registrationId === reg.id && state.nameFirst) || (reg.applicant && reg.applicant.firstName) || ''),
+            nameLast: (reg.applicant && reg.applicant.nameVerified) ? reg.applicant.lastName : ((state.registrationId === reg.id && state.nameLast) || (reg.applicant && reg.applicant.lastName) || ''),
             trainingName: (reg.cohort && reg.cohort.training && reg.cohort.training.name) || state.trainingName,
             cohortName: (reg.cohort && reg.cohort.name) || state.cohortName,
             cohortId: (reg.cohort && reg.cohort.id) || state.cohortId
           });
           renderRegPanelFromState();
         } catch (err) {
+          if (err && (err.status === 401 || err.status === 404)) {
+            // Session ended (APIHelper redirects to log in) or a stale
+            // registration that isn't this user's -- drop it quietly.
+            if (err.status === 404) { clearState(); renderRegPanelFromState(); }
+            return;
+          }
           toast(errMsg(err, 'Could not refresh registration status.'), 'error');
         }
       }
@@ -442,6 +477,11 @@
         const state = readState();
 
         if (!reference && !state) return;
+        // Back from Paystack without a session -- log in first, then return here.
+        if (!isLoggedIn()) {
+          if (reference) goToLogin();
+          return;
+        }
         if (reference) cleanCallbackQuery();
         if (!state || !state.registrationId) return;
 
@@ -490,20 +530,28 @@
         const cohortId = query.get('cohort');
         if (!trainingId) return;
         await selectTraining(trainingId);
-        if (cohortId) {
+        if (cohortId && isLoggedIn()) {
           const cohort = cohortsCache.find(c => c.id === cohortId);
           if (cohort) openRegisterModal(cohort);
         }
       }
 
       // ── Init ─────────────────────────────────────────────────────
-      renderRegPanelFromState();
+      if (isLoggedIn()) {
+        renderRegPanelFromState();
+      } else {
+        clearState(); // leftover from a previous session -- never shown to a guest
+      }
       await handlePaymentReturn();
 
       // Deep link from My Training: training.html?registration=<id> opens that
       // registration's panel (payment check, identity verification, ID card,
       // certificate) -- the same panel a fresh registration uses.
       const linkedRegistrationId = new URLSearchParams(window.location.search).get('registration');
+      if (linkedRegistrationId && !isLoggedIn()) {
+        goToLogin(); // viewing a registration needs its owner's account
+        return;
+      }
       if (linkedRegistrationId) {
         await refreshRegistrationDetail(linkedRegistrationId);
         const regPanel = document.getElementById('regPanel');
