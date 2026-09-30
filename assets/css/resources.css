@@ -1,0 +1,105 @@
+/* Hairlux Academy -- Free Resources page (builds on courses.css tokens) */
+.res-hero { text-align: center; padding: 38px 12px 26px; max-width: 700px; margin: 0 auto; }
+.res-hero .p-regular { color: var(--muted); margin-top: 10px; line-height: 1.65; }
+.academy-badge-sm {
+  display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  color: #9d8248; background: #faf5ee; border: 1px solid rgba(157,130,72,.25); border-radius: 999px; padding: 5px 12px; margin-bottom: 12px;
+}
+.res-filter-bar { align-items: center; }
+.res-search {
+  flex: 1; min-width: 220px; height: 42px; padding: 0 14px; border: 1px solid var(--border, #dfe3e6);
+  border-radius: 999px; font-size: 14px; background: var(--card-bg); color: var(--primary);
+}
+.res-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.res-chip {
+  border: 1px solid var(--border); background: var(--card-bg); color: var(--primary); border-radius: 999px;
+  padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background .15s, color .15s;
+}
+.res-chip:hover { border-color: #d8c9a3; }
+.res-chip.is-active { background: var(--primary); color: var(--card-bg); border-color: var(--primary); }
+
+.res-card { cursor: default; padding: 0; overflow: hidden; gap: 0; }
+.res-card-cover {
+  aspect-ratio: 16 / 9; background: linear-gradient(135deg, #faf5ee 0%, #efe4cf 100%);
+  display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;
+}
+.res-card-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.res-card-cover .res-file-icon {
+  width: 64px; height: 78px; border-radius: 8px; background: #fff; color: #9d8248; box-shadow: 0 6px 18px rgba(0,0,0,.08);
+  display: flex; align-items: flex-end; justify-content: center; padding-bottom: 12px;
+  font: 800 13px/1 'IBM Plex Mono', monospace; letter-spacing: .04em; position: relative;
+}
+.res-card-cover .res-file-icon::before {
+  content: ""; position: absolute; top: 0; right: 0; width: 18px; height: 18px;
+  background: linear-gradient(225deg, #efe4cf 50%, #e2d3b4 50%); border-bottom-left-radius: 6px;
+}
+.res-card-type {
+  position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,.72); color: #fff; font: 700 10.5px/1 'IBM Plex Mono', monospace;
+  letter-spacing: .06em; padding: 5px 8px; border-radius: 6px;
+}
+.res-card-body { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.res-card-desc { white-space: pre-line; }
+.res-card-bottom { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 4px; }
+.res-card-meta { font-size: 12px; color: var(--muted); }
+.res-card-done { font-size: 11.5px; color: var(--success); font-weight: 700; }
+.res-card.is-highlight { border-color: #9d8248; box-shadow: 0 0 0 3px rgba(157,130,72,.25), var(--shadow-soft); }
+
+.res-summary {
+  display: flex; gap: 12px; align-items: center; background: var(--primary-light); border: 1px solid rgba(140,94,26,.16);
+  border-radius: 12px; padding: 12px 14px; margin-bottom: 16px;
+}
+.res-summary-icon {
+  flex: none; width: 40px; height: 48px; border-radius: 6px; background: #fff; color: #9d8248;
+  display: flex; align-items: flex-end; justify-content: center; padding-bottom: 7px; font: 800 10px/1 'IBM Plex Mono', monospace;
+  box-shadow: 0 3px 10px rgba(0,0,0,.07);
+}
+.res-summary-title { font-weight: 700; color: var(--primary); font-size: 14px; line-height: 1.35; }
+.res-summary-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+#resForm { display: flex; flex-direction: column; gap: 14px; }
+.form-group input[type="tel"] {
+  height: 42px; padding: 0 12px; border: 1.5px solid #d1d8cf; border-radius: 10px; font-size: 14px; color: #111;
+  background: #fafafa; outline: none; width: 100%; box-sizing: border-box; transition: border-color .16s, box-shadow .16s;
+}
+.form-group input[type="tel"]:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(140,94,26,.1); }
+.form-group input.is-invalid { border-color: var(--danger); }
+.res-hp { position: absolute !important; left: -10000px !important; width: 1px; height: 1px; overflow: hidden; }
+.res-consent { display: flex; gap: 10px; align-items: flex-start; font-size: 12.5px; color: var(--muted); line-height: 1.5; cursor: pointer; }
+.res-consent input { margin-top: 3px; width: 16px; height: 16px; accent-color: #9d8248; flex: none; }
+.res-privacy { font-size: 11.5px; color: var(--muted); margin: 4px 0 0; text-align: center; }
+#resForm .modal-actions { margin-top: 4px; }
+
+.res-done { text-align: center; padding: 12px 4px 0; }
+.res-done-icon {
+  width: 60px; height: 60px; border-radius: 50%; background: var(--success-bg); color: var(--success);
+  display: flex; align-items: center; justify-content: center; margin: 0 auto 14px;
+}
+.res-done .modal-subtitle { margin: 8px 0 12px; line-height: 1.6; }
+.res-done-again { font-size: 13px; color: var(--muted); }
+.res-done-again a { color: var(--primary); font-weight: 700; text-decoration: underline; }
+.res-done-actions { justify-content: center; }
+
+.res-cta {
+  margin: 40px 0 56px; padding: 26px 28px; border-radius: var(--radius-lg); background: var(--primary-light);
+  border: 1px solid rgba(140,94,26,.16); display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap;
+}
+.res-cta h3 { margin: 0 0 4px; font-size: 18px; color: var(--primary); }
+.res-cta p { margin: 0; color: var(--muted); font-size: 13.5px; }
+.res-cta-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.res-cta-actions a, .res-cta-actions a:hover { text-decoration: none; }
+
+@media (max-width: 600px) {
+  .res-filter-bar { flex-direction: column; align-items: stretch; }
+  .res-search { flex: none; width: 100%; }
+  .res-chips { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; }
+  .res-chip { white-space: nowrap; }
+  #resForm .modal-actions { flex-direction: column-reverse; }
+  #resForm .modal-actions button { width: 100%; }
+}
+
+[data-theme="dark"] .academy-badge-sm { background: rgba(157,130,72,.18); color: #e0c68f; }
+[data-theme="dark"] .res-card-cover { background: linear-gradient(135deg, #2a2620 0%, #3a3122 100%); }
+[data-theme="dark"] .res-card-cover .res-file-icon,
+[data-theme="dark"] .res-summary-icon { background: #1c2027; color: #e0c68f; }
+[data-theme="dark"] .form-group input[type="tel"] { background: var(--surface); color: var(--primary); border-color: var(--border); }
+[data-theme="dark"] .res-chip.is-active { color: #000; }

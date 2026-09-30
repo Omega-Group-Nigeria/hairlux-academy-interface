@@ -264,7 +264,7 @@
             if (typeof result.passed === 'boolean') {
               if (result.passed) {
                 document.getElementById('assessmentPane').innerHTML = `<h2>Assessment</h2>${blockedMarkup(fresh)}`;
-                toast('Passed!');
+                toast('Passed!d');
                 return;
               }
               const retry = fresh.canAttempt

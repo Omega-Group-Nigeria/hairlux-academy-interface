@@ -4,15 +4,15 @@
 
 <head>
   <meta charset="utf-8" />
-  <title>Hairlux - Course Player</title>
+  <title>Hairlux - My Training</title>
   <meta
     content="Hairlux Salon & Spa delivers premium hair, beauty, and wellness services straight to your location. Book a luxury mobile spa experience today."
     name="description" />
-  <meta content="Hairlux - Course Player" property="og:title" />
+  <meta content="Hairlux - My Training" property="og:title" />
   <meta
     content="Hairlux Salon & Spa delivers premium hair, beauty, and wellness services straight to your location. Book a luxury mobile spa experience today."
     property="og:description" />
-  <meta content="Hairlux - Course Player" property="twitter:title" />
+  <meta content="Hairlux - My Training" property="twitter:title" />
   <meta
     content="Hairlux Salon & Spa delivers premium hair, beauty, and wellness services straight to your location. Book a luxury mobile spa experience today."
     property="twitter:description" />
@@ -84,7 +84,7 @@
             <a href="../courses.html" class="dropdown-link w-dropdown-link">Digital Courses</a>
             <a href="../training.html" class="dropdown-link w-dropdown-link">In-Branch Training</a>
             <a href="my-courses.html" class="dropdown-link w-dropdown-link">My Courses</a>
-            <a href="my-training.html" class="dropdown-link w-dropdown-link">My Training</a>
+            <a href="my-training.html" aria-current="page" class="dropdown-link w-dropdown-link w--current">My Training</a>
             <a href="profile.html" class="dropdown-link w-dropdown-link">My Profile</a>
             <a href="../log-in.html" data-logout="true" class="dropdown-link w-dropdown-link">Logout</a>
           </nav>
@@ -97,10 +97,22 @@
     <section class="section">
       <div class="crs-shell">
 
-        <div class="crs-section-sub" style="margin-bottom:14px;"><a id="backToDetail" href="../courses.html">← Back to course</a></div>
+        <div class="crs-header">
+          <h1 class="h-l">My Training</h1>
+          <p class="p-regular">Your in-branch training registrations: schedule, attendance, and certificates.</p>
+        </div>
 
-        <div id="playerRoot">
-          <div class="empty-state">Loading course…</div>
+        <div class="crs-tabs" id="tabBar">
+          <button class="crs-tab is-active" data-bucket="ALL">All</button>
+          <button class="crs-tab" data-bucket="UPCOMING">Upcoming</button>
+          <button class="crs-tab" data-bucket="IN_PROGRESS">In Progress</button>
+          <button class="crs-tab" data-bucket="COMPLETED">Completed</button>
+          <button class="crs-tab" data-bucket="PENDING_PAYMENT">Awaiting Payment</button>
+          <button class="crs-tab" data-bucket="WAITLISTED">Waitlisted</button>
+        </div>
+
+        <div id="myTrainingGrid" class="crs-grid">
+          <div class="empty-state">Loading your training…</div>
         </div>
 
       </div>
@@ -121,9 +133,9 @@
   <script src="../assets/js/auth-api.js"></script>
   <script src="../assets/js/ui-helper.js"></script>
   <script src="../assets/js/app-auth.js"></script>
-  <script src="../assets/js/academy-courses-api.js"></script>
+  <script src="../assets/js/academy-training-api.js"></script>
 
-<script src="assets/js/course-player.js"></script>
+<script src="assets/js/my-training.js"></script>
 
 <script src="../assets/js/pwa.js" defer></script>
 </body>

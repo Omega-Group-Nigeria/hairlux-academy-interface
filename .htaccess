@@ -1,1 +1,13 @@
 DirectoryIndex index.html index.htm
+
+# ── PWA ────────────────────────────────────────────────────────────
+# Correct type for the web app manifest, and never let the browser/CDN
+# cache the service worker or manifest (so new deploys are picked up).
+<IfModule mod_mime.c>
+  AddType application/manifest+json .webmanifest
+</IfModule>
+<IfModule mod_headers.c>
+  <FilesMatch "^(sw\.js|manifest\.webmanifest)$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+  </FilesMatch>
+</IfModule>

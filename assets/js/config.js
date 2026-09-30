@@ -90,6 +90,9 @@ const API_CONFIG = {
       DISCOUNT_VALIDATE: '/commerce/discount-codes/validate',
       CERTIFICATES: '/commerce/certificates'
     },
+    FREE_RESOURCES: {
+      BASE: '/academy/free-resources' // GET list; POST /:idOrSlug/download (public, lead form)
+    },
     ACADEMY_COURSES: {
       COURSES: '/academy/courses',
       COURSE_REVIEWS: '/academy/courses',
