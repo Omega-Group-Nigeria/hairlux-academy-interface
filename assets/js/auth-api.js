@@ -31,8 +31,45 @@ const APIHelper = {
     const path = window.location.pathname || '';
     if (/\/log-in\.html$/i.test(path)) return;
 
-    const loginPage = /\/app(\/|$)/i.test(path) ? '../log-in.html' : 'log-in.html';
-    window.location.href = loginPage;
+    // Public pages (e.g. training.html) work for guests: an expired session
+    // just drops back to the guest view instead of forcing a log-in.
+    if (window.HAIRLUX_PUBLIC_PAGE) {
+      this.redirectingToLogin = true;
+      window.location.reload();
+      return;
+    }
+
+    // Callers can check this to skip error toasts for a request that failed
+    // only because the session ended (the page is navigating to log in).
+    this.redirectingToLogin = true;
+    window.location.href = this.loginUrl();
+  },
+
+  /**
+   * Log-in page URL carrying ?returnTo=<this page> so the user lands back
+   * where they were after signing in (log-in.js -> UIHelper.getPostAuthRedirect,
+   * which resolves returnTo relative to the site root).
+   */
+  loginUrl() {
+    const path = window.location.pathname || '';
+    const inApp = /\/app(\/|$)/i.test(path);
+    const file = path.split('/').pop() || 'index.html';
+    const loginPage = inApp ? '../log-in.html' : 'log-in.html';
+    if (/^(log-in|sign-up)\.html$/i.test(file)) return loginPage;
+    const returnTo = (inApp ? 'app/' : '') + file + (window.location.search || '');
+    return `${loginPage}?returnTo=${encodeURIComponent(returnTo)}`;
+  },
+
+  /**
+   * Guard for pages that only make sense signed in: redirects to log in
+   * (with returnTo) and returns false when there is no session, so the
+   * caller can stop before making any API call.
+   */
+  requireAuth() {
+    if (this.isAuthenticated()) return true;
+    this.redirectingToLogin = true;
+    window.location.replace(this.loginUrl());
+    return false;
   },
 
   /**
@@ -190,6 +227,13 @@ const APIHelper = {
     localStorage.removeItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN);
     localStorage.removeItem(API_CONFIG.STORAGE_KEYS.REFRESH_TOKEN);
     localStorage.removeItem(API_CONFIG.STORAGE_KEYS.USER_DATA);
+    // Per-session Academy state (a pending registration/course order) must
+    // not survive sign-out -- training.html would otherwise try to load the
+    // previous user's registration.
+    try {
+      sessionStorage.removeItem('hairlux_academy_training_pending');
+      sessionStorage.removeItem('hairlux_academy_course_pending');
+    } catch (_) { /* ignore */ }
   },
 
   /**

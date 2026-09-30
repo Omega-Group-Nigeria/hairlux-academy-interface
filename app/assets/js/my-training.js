@@ -9,6 +9,7 @@
  * registration's panel, so those flows exist in exactly one place.
  */
 document.addEventListener('DOMContentLoaded', async () => {
+  if (typeof APIHelper !== 'undefined' && !APIHelper.isAuthenticated()) return; // app-auth.js is redirecting to log in
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const toast = (msg, type = 'success') => { if (typeof UIHelper !== 'undefined') UIHelper.showToast(msg, type); };
   const errMsg = (err, fallback) => (err && err.message) ? err.message : fallback;

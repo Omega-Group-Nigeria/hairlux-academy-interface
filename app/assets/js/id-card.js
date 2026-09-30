@@ -8,6 +8,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
+  if (typeof APIHelper !== 'undefined' && !APIHelper.isAuthenticated()) return; // app-auth.js is redirecting to log in
   const root = document.getElementById('idcRoot');
   const printBtn = document.getElementById('idcPrintBtn');
 

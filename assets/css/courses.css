@@ -210,6 +210,18 @@
     .crs-detail-hero h1 { margin: 0 0 8px; font-size: 24px; color: var(--primary); }
     .crs-detail-meta-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
     .crs-detail-desc { font-size: 13.5px; color: #374151; line-height: 1.65; }
+    /* Payment return banner (course-detail.html after Paystack) */
+    .crs-pay-status { display: flex; gap: 12px; align-items: flex-start; border: 1px solid var(--border, #e5e5e5); border-radius: 12px; padding: 14px 16px; margin: 0 0 18px; background: var(--surface, #fff); }
+    .crs-pay-status-icon { flex: 0 0 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; background: var(--border, #eee); }
+    .crs-pay-status-title { font-weight: 700; margin-bottom: 2px; }
+    .crs-pay-status-msg { font-size: 13px; opacity: .9; }
+    .crs-pay-status-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .crs-pay-status-success { background: var(--success-bg); border-color: var(--success); }
+    .crs-pay-status-success .crs-pay-status-icon { background: var(--success); color: #fff; }
+    .crs-pay-status-success .crs-pay-status-title { color: var(--success); }
+    .crs-pay-status-error { background: var(--danger-bg); border-color: var(--danger); }
+    .crs-pay-status-error .crs-pay-status-icon { background: var(--danger); color: #fff; }
+    .crs-pay-status-error .crs-pay-status-title { color: var(--danger); }
     .crs-rich > :first-child { margin-top: 0; }
     .crs-rich > :last-child { margin-bottom: 0; }
     .crs-rich p { margin: 0 0 8px; }

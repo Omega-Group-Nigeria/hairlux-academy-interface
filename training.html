@@ -109,6 +109,30 @@
           <p class="p-regular">Hands-on training at a Hairlux branch near you — browse programmes, pick a cohort, and register.</p>
         </div>
 
+        <!-- ── Check Registration Status ── -->
+        <div class="trn-section-title">
+          <div>
+            <h2>Check Registration Status</h2>
+            <div class="trn-section-sub">Look up any registration by its code and the email used to register.</div>
+          </div>
+        </div>
+        <div class="trn-cohorts-panel" style="margin-bottom:28px;">
+          <div style="padding:20px 22px;">
+            <form id="lookupForm" class="trn-lookup-row" novalidate>
+              <div class="form-group">
+                <label for="lookupCode">Registration Code</label>
+                <input type="text" id="lookupCode" placeholder="HLA-IBD-2026-000123" required />
+              </div>
+              <div class="form-group">
+                <label for="lookupEmail">Email</label>
+                <input type="email" id="lookupEmail" placeholder="you@example.com" required />
+              </div>
+              <button type="submit" class="btn-trn btn-trn-primary" id="lookupSubmit">Check Status</button>
+            </form>
+            <div id="lookupResult" class="trn-lookup-result"></div>
+          </div>
+        </div>
+
         <!-- ── Your Registration (session-persisted) ── -->
         <div id="regPanel" class="trn-reg-panel" style="display:none;"></div>
 
@@ -135,30 +159,6 @@
             </select>
           </div>
           <div id="cohortsList" class="trn-cohorts-list"></div>
-        </div>
-
-        <!-- ── Check Registration Status ── -->
-        <div class="trn-section-title">
-          <div>
-            <h2>Check Registration Status</h2>
-            <div class="trn-section-sub">Look up any registration by its code and the email used to register.</div>
-          </div>
-        </div>
-        <div class="trn-cohorts-panel">
-          <div style="padding:20px 22px;">
-            <form id="lookupForm" class="trn-lookup-row" novalidate>
-              <div class="form-group">
-                <label for="lookupCode">Registration Code</label>
-                <input type="text" id="lookupCode" placeholder="HLA-IBD-2026-000123" required />
-              </div>
-              <div class="form-group">
-                <label for="lookupEmail">Email</label>
-                <input type="email" id="lookupEmail" placeholder="you@example.com" required />
-              </div>
-              <button type="submit" class="btn-trn btn-trn-primary" id="lookupSubmit">Check Status</button>
-            </form>
-            <div id="lookupResult" class="trn-lookup-result"></div>
-          </div>
         </div>
 
       </div>

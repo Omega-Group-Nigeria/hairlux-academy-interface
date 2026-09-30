@@ -3,9 +3,10 @@
 
       // Descriptions are rich text now -- cards show a short plain-text preview.
       const textPreview = (html, max = 160) => {
-        const d = document.createElement('div');
+        // <template> content is inert -- no image loads/handlers while extracting text.
+        const d = document.createElement('template');
         d.innerHTML = html == null ? '' : String(html);
-        const t = (d.textContent || '').replace(/\s+/g, ' ').trim();
+        const t = (d.content.textContent || '').replace(/\s+/g, ' ').trim();
         return (t.length > max ? t.slice(0, max).trimEnd() + '\u2026' : t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
       };
       const fmtNaira = (n) => n === 0 ? 'Free' : '₦' + Number(n || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
