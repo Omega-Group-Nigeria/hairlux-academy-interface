@@ -301,7 +301,7 @@ const AuthAPI = {
   /**
    * Sign in or sign up with Google
    * @param {string} idToken - The ID token returned by Google Sign-In
-   * @returns {Promise<object>} Login response — same shape as login()
+   * @returns {Promise<object>} Login response: same shape as login()
    */
   async googleSignIn(idToken) {
     const response = await APIHelper.request(API_CONFIG.ENDPOINTS.AUTH.GOOGLE, {
@@ -309,7 +309,7 @@ const AuthAPI = {
       body: JSON.stringify({ idToken: idToken })
     });
 
-    // Save tokens and user data — identical handling to login()
+    // Save tokens and user data: identical handling to login()
     if (response && response.data && response.data.accessToken && response.data.refreshToken) {
       APIHelper.saveTokens(response.data.accessToken, response.data.refreshToken);
       if (response.data.user) {

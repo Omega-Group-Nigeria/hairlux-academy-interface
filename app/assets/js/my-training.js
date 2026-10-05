@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // calendar dates stored at UTC midnight -> format in UTC so they never shift a day.
   const fmtDate = (v, tz = 'Africa/Lagos') => v
     ? new Date(v).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric', timeZone: tz })
-    : '—';
+    : '-';
   const fmtTime = (v) => v
     ? new Date(v).toLocaleTimeString('en-NG', { hour: 'numeric', minute: '2-digit', timeZone: 'Africa/Lagos' })
     : '';
@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const modulesPct = r.modules && r.modules.total ? Math.round((r.modules.passed / r.modules.total) * 100) : 0;
 
     const facts = [
-      ['Branch', r.cohort.branch ? r.cohort.branch.name : '—'],
+      ['Branch', r.cohort.branch ? r.cohort.branch.name : '-'],
       ['Cohort', r.cohort.name],
       ['Dates', `${fmtDate(r.cohort.startDate)} – ${fmtDate(r.cohort.endDate)}`],
       next ? ['Next session', next] : null,
@@ -67,9 +67,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (stage === 'PENDING_PAYMENT') {
       notes = `<div class="trn-card-note">Payment not confirmed${r.order ? ` · ${money(r.order.amount)}` : ''}${r.expiresAt ? ` · seat held until ${fmtDate(r.expiresAt)}` : ''}</div>`;
     } else if (stage === 'WAITLISTED') {
-      notes = `<div class="crs-card-meta"><span>You're on the waitlist — we'll email you if a seat opens up.</span></div>`;
+      notes = `<div class="crs-card-meta"><span>You're on the waitlist: we'll email you if a seat opens up.</span></div>`;
     } else if (confirmed && !idVerified && stage !== 'CLOSED') {
-      notes = `<div class="trn-card-note">Identity verification needed${r.identityStatus === 'FAILED' ? ' — last attempt failed' : ''}</div>`;
+      notes = `<div class="trn-card-note">Identity verification needed${r.identityStatus === 'FAILED' ? ': last attempt failed' : ''}</div>`;
     }
 
     let progress = '';
@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const certHtml = cert
-      ? `<div class="crs-cert-badge">🎓 Certificate earned — ${esc(cert.certificateNumber)}</div>`
+      ? `<div class="crs-cert-badge">🎓 Certificate earned: ${esc(cert.certificateNumber)}</div>`
       : (stage === 'COMPLETED' && r.training.certificationEnabled ? '<div class="crs-card-meta"><span>Certificate will appear here once issued.</span></div>' : '');
 
     const actions = [];

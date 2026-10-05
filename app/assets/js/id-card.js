@@ -15,9 +15,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const escSafe = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
   const fmtDate = (iso) => {
-    if (!iso) return '—';
+    if (!iso) return '-';
     const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return '—';
+    if (Number.isNaN(d.getTime())) return '-';
     return d.toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
@@ -63,19 +63,19 @@ document.addEventListener('DOMContentLoaded', async () => {
           <div class="idc-avatar">${escSafe(initials)}</div>
           <div class="idc-details">
             <p class="idc-name">${escSafe(fullName)}</p>
-            <p class="idc-code">${escSafe(reg.registrationCode || '—')}</p>
+            <p class="idc-code">${escSafe(reg.registrationCode || '-')}</p>
             <div class="idc-rows">
               <div class="idc-row">
                 <span class="idc-row-label">Training</span>
-                <span class="idc-row-value">${escSafe(training.name || '—')}</span>
+                <span class="idc-row-value">${escSafe(training.name || '-')}</span>
               </div>
               <div class="idc-row">
                 <span class="idc-row-label">Cohort</span>
-                <span class="idc-row-value">${escSafe(cohort.name || '—')}</span>
+                <span class="idc-row-value">${escSafe(cohort.name || '-')}</span>
               </div>
               <div class="idc-row">
                 <span class="idc-row-label">Branch</span>
-                <span class="idc-row-value">${escSafe(branch.name || '—')}</span>
+                <span class="idc-row-value">${escSafe(branch.name || '-')}</span>
               </div>
               <div class="idc-row">
                 <span class="idc-row-label">Cohort Dates</span>

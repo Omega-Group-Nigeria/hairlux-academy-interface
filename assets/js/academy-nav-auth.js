@@ -1,5 +1,5 @@
 /**
- * Hairlux Academy — Navigation Authentication Handler
+ * Hairlux Academy: Navigation Authentication Handler
  * Updates navbar buttons based on login state for public Academy pages
  * (log-in, sign-up, landing page). Mirrors the main site's nav-auth.js
  * dynamic-injection pattern, trimmed to the links that exist on this site.

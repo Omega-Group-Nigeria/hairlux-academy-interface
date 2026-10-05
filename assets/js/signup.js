@@ -51,7 +51,7 @@
     }
 
     /* ── Google Sign-In ─────────────────────────────────────────────────── */
-    // Same backend endpoint as the login page — googleSignIn() on the
+    // Same backend endpoint as the login page: googleSignIn() on the
     // server handles both "create a new account" and "log in an existing
     // one" in a single call, so this one button covers both signup and
     // login without needing to know which the person actually wants.

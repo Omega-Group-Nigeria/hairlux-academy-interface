@@ -11,7 +11,7 @@
           + (pct > 0 ? ` <span class="crs-price-save">${p.priceType === 'PROMOTIONAL' ? 'Promo ' : ''}-${pct}%</span>` : '');
       };
       const fmtDate = (iso) => {
-        if (!iso) return '—';
+        if (!iso) return '-';
         const d = new Date(iso);
         return d.toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' });
       };
@@ -190,8 +190,8 @@
             <div class="crs-progress-label">${pct}% complete</div>
             <button class="btn-crs btn-crs-primary btn-crs-block" style="margin-top:16px;" id="btnContinue">${isComplete ? 'Review Course' : 'Continue Learning'}</button>
             ${isComplete && course.certificateEnabled ? (myCertificate
-              ? `<div class="crs-cert-badge" style="margin-top:12px;">🎓 Certificate earned — ${esc(myCertificate.certificateNumber)}</div><div class="crs-cert-note">Keep this number for your records — Hairlux Academy can verify it on request.</div><a class="btn-crs btn-crs-outline btn-crs-block" style="margin-top:10px;" href="${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ACADEMY_COMMERCE.CERTIFICATES}/${encodeURIComponent(myCertificate.certificateNumber)}/download" target="_blank" rel="noopener">Download Certificate (PDF)</a>`
-              : '<div class="crs-cert-badge" style="margin-top:12px;">🎓 Certificate earned</div><div class="crs-cert-note">Your certificate is being issued — check back shortly, or reach out to Hairlux Academy.</div>') : ''}
+              ? `<div class="crs-cert-badge" style="margin-top:12px;">🎓 Certificate earned: ${esc(myCertificate.certificateNumber)}</div><div class="crs-cert-note">Keep this number for your records: Hairlux Academy can verify it on request.</div><a class="btn-crs btn-crs-outline btn-crs-block" style="margin-top:10px;" href="${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ACADEMY_COMMERCE.CERTIFICATES}/${encodeURIComponent(myCertificate.certificateNumber)}/download" target="_blank" rel="noopener">Download Certificate (PDF)</a>`
+              : '<div class="crs-cert-badge" style="margin-top:12px;">🎓 Certificate earned</div><div class="crs-cert-note">Your certificate is being issued: check back shortly, or reach out to Hairlux Academy.</div>') : ''}
             ${isComplete ? '<button class="btn-crs btn-crs-outline btn-crs-block" style="margin-top:10px;" id="btnWriteReview">Write a Review</button>' : ''}
           </div>`;
         }
@@ -228,7 +228,7 @@
                   ${course.averageRating ? `<span class="crs-card-rating">★ ${(Math.round(course.averageRating * 10) / 10).toFixed(1)}</span>` : ''}
                 </div>
                 <h1>${esc(course.title)}</h1>
-                ${course.instructor ? `<div class="form-hint" style="margin-bottom:12px;">Instructor: ${esc(course.instructor.name)}${course.instructor.currentRole ? ' — ' + esc(course.instructor.currentRole) : ''}</div>` : ''}
+                ${course.instructor ? `<div class="form-hint" style="margin-bottom:12px;">Instructor: ${esc(course.instructor.name)}${course.instructor.currentRole ? ': ' + esc(course.instructor.currentRole) : ''}</div>` : ''}
                 <div class="crs-detail-desc crs-rich">${richText(course.description || course.shortDescription || '')}</div>
                 ${course.requirements ? `<div class="crs-detail-block"><h4>Requirements</h4><div class="crs-rich">${richText(course.requirements)}</div></div>` : ''}
                 ${course.learningObjectives ? `<div class="crs-detail-block"><h4>What you'll learn</h4><div class="crs-rich">${richText(course.learningObjectives)}</div></div>` : ''}
@@ -328,7 +328,7 @@
         try {
           const result = await AcademyCoursesAPI.validateDiscountCode(code, price ? price.amount : 0);
           appliedDiscount = { code, ...result };
-          discountHint.textContent = `${result.name || code}: −${fmtNaira(result.discountAmount)} — you pay ${fmtNaira(result.finalAmount)}`;
+          discountHint.textContent = `${result.name || code}: −${fmtNaira(result.discountAmount)}: you pay ${fmtNaira(result.finalAmount)}`;
           const priceEl = document.getElementById('purchasePrice');
           // Keep the normal fee struck through, now against the final amount after the code.
           if (priceEl) {
@@ -402,7 +402,7 @@
         try {
           await AcademyCoursesAPI.submitReview(courseId, selectedRating, document.getElementById('reviewText').value.trim() || undefined);
           closeReviewModal();
-          toast('Review submitted — pending moderation.');
+          toast('Review submitted: pending moderation.');
         } catch (err) {
           reviewError.textContent = errMsg(err, 'Could not submit review.');
           reviewError.classList.add('is-visible');
@@ -448,16 +448,16 @@
         try {
           await AcademyCoursesAPI.verifyPayment(orderId);
           clearState();
-          showPaymentStatus('success', 'Payment successful — you\'re enrolled!', 'Your access to this course is now active.',
+          showPaymentStatus('success', 'Payment successful: you\'re enrolled!', 'Your access to this course is now active.',
             `<a class="btn-crs btn-crs-primary" href="${playerUrl()}">Start Learning</a> <a class="btn-crs btn-crs-outline" href="app/my-courses.html">My Courses</a>`);
-          toast('Payment verified — access granted!');
+          toast('Payment verified: access granted!');
           return true;
         } catch (err) {
           if (err && err.status === 401) return false; // session expired -- APIHelper is redirecting to log in
           const notYet = /not been completed/i.test((err && err.message) || '');
           showPaymentStatus(notYet ? 'pending' : 'error',
             notYet ? 'Payment not completed yet' : 'We couldn\'t confirm your payment',
-            errMsg(err, 'Payment could not be verified.') + (notYet ? '' : ' If you were charged, your access will be activated automatically once Paystack confirms it — or contact Hairlux Academy with your payment reference.'),
+            errMsg(err, 'Payment could not be verified.') + (notYet ? '' : ' If you were charged, your access will be activated automatically once Paystack confirms it: or contact Hairlux Academy with your payment reference.'),
             `<button type="button" class="btn-crs btn-crs-primary" id="btnRecheckPayment">Check Again</button>`);
           const recheck = document.getElementById('btnRecheckPayment');
           if (recheck) recheck.addEventListener('click', async () => {

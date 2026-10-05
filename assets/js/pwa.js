@@ -1,7 +1,7 @@
 /**
- * Hairlux Academy PWA bootstrap — include on every page (before </body>).
+ * Hairlux Academy PWA bootstrap: include on every page (before </body>).
  *  1. Registers the service worker (sw.js at the site root).
- *  2. Offers "Install the Hairlux app" — Android/desktop Chrome & Edge via the
+ *  2. Offers "Install the Hairlux app": Android/desktop Chrome & Edge via the
  *     browser's install prompt; iPhone/iPad via "Share → Add to Home Screen".
  *  3. When a new version of the site is deployed, offers "Refresh".
  * Works from both root pages (assets/js/pwa.js) and /app/ pages (../assets/js/pwa.js):

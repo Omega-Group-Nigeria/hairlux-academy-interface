@@ -21,7 +21,7 @@ window.HAIRLUX_PUBLIC_PAGE = true;
       // ── Helpers ──────────────────────────────────────────────────
       const fmtNaira = (n) => '₦' + Number(n || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       const fmtDate  = (iso) => {
-        if (!iso) return '—';
+        if (!iso) return '-';
         const d = new Date(iso);
         return d.toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' });
       };
@@ -82,7 +82,7 @@ window.HAIRLUX_PUBLIC_PAGE = true;
         const grid = document.getElementById('trainingsGrid');
         const list = filteredTrainings();
         if (!trainingsCache.length) {
-          grid.innerHTML = '<div class="empty-state">No programmes are published yet — check back soon.</div>';
+          grid.innerHTML = '<div class="empty-state">No programmes are published yet: check back soon.</div>';
           return;
         }
         if (!list.length) {
@@ -134,7 +134,7 @@ window.HAIRLUX_PUBLIC_PAGE = true;
         const title = document.getElementById('cohortsTitle');
         const branchFilter = document.getElementById('branchFilter');
 
-        title.textContent = training ? `Cohorts — ${training.name}` : 'Cohorts';
+        title.textContent = training ? `Cohorts: ${training.name}` : 'Cohorts';
         panel.style.display = '';
         list.innerHTML = '<div class="empty-state">Loading cohorts…</div>';
         panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -219,7 +219,7 @@ window.HAIRLUX_PUBLIC_PAGE = true;
           <div style="margin:4px 0;">${cohort.name} · ${(cohort.branch && cohort.branch.name) || ''}</div>
           <div style="margin:4px 0;">${fmtDate(cohort.startDate)} – ${fmtDate(cohort.endDate)}</div>
           <div class="trn-summary-price" id="registerPrice">${fmtNaira(price)}</div>
-          ${cohort.status === 'FULL' ? '<div class="form-hint" style="margin-top:8px;">This cohort is full — registering will add you to the waitlist instead.</div>' : ''}
+          ${cohort.status === 'FULL' ? '<div class="form-hint" style="margin-top:8px;">This cohort is full: registering will add you to the waitlist instead.</div>' : ''}
         `;
 
         document.getElementById('registerTitle').textContent = cohort.status === 'FULL' ? 'Join Waitlist' : 'Register';
@@ -243,7 +243,7 @@ window.HAIRLUX_PUBLIC_PAGE = true;
         try {
           const result = await AcademyTrainingAPI.validateDiscountCode(code, price);
           appliedDiscount = { code, ...result };
-          discountHint.textContent = `${result.name || code}: −${fmtNaira(result.discountAmount)} — you pay ${fmtNaira(result.finalAmount)}`;
+          discountHint.textContent = `${result.name || code}: −${fmtNaira(result.discountAmount)}: you pay ${fmtNaira(result.finalAmount)}`;
           const priceEl = document.getElementById('registerPrice');
           if (priceEl) priceEl.textContent = fmtNaira(result.finalAmount);
         } catch (err) {
@@ -264,7 +264,7 @@ window.HAIRLUX_PUBLIC_PAGE = true;
 
           if (result.waitlisted) {
             closeRegisterModal();
-            toast('Cohort is full — you have been added to the waitlist.', 'success');
+            toast('Cohort is full: you have been added to the waitlist.', 'success');
             saveState({
               registrationId: result.registration.id,
               registrationCode: result.registration.registrationCode,
@@ -323,24 +323,24 @@ window.HAIRLUX_PUBLIC_PAGE = true;
         let body = `
           <div class="trn-reg-top">
             <div>
-              <div class="trn-reg-code">${state.registrationCode || '—'}</div>
+              <div class="trn-reg-code">${state.registrationCode || '-'}</div>
               <div class="form-hint">${state.trainingName || ''} · ${state.cohortName || ''}</div>
             </div>
             <span class="trn-pill trn-pill-${state.status}">${(state.status || '').replace(/_/g, ' ')}</span>
           </div>`;
 
         if (isWaitlisted) {
-          body += `<div class="trn-reg-line">You're on the waitlist — we'll email you if a seat opens up.</div>`;
+          body += `<div class="trn-reg-line">You're on the waitlist: we'll email you if a seat opens up.</div>`;
         } else if (needsPayment) {
           body += `<div class="trn-reg-line">Payment has not been confirmed yet.</div>
-            <div class="trn-reg-actions"><button class="btn-trn btn-trn-primary" id="btnVerifyPayment">I've Completed Payment — Verify</button></div>`;
+            <div class="trn-reg-actions"><button class="btn-trn btn-trn-primary" id="btnVerifyPayment">I've Completed Payment: Verify</button></div>`;
         } else if (isConfirmed) {
           body += `<div class="trn-reg-line" style="color:var(--success);font-weight:600;">Registration confirmed.</div>`;
           body += `<div class="trn-reg-actions"><a class="btn-trn btn-trn-primary" href="app/id-card.html?registrationId=${encodeURIComponent(state.registrationId)}" target="_blank" rel="noopener">View My ID Card</a></div>`;
           if (state.cohortId && cachedCertificateCohortId !== state.cohortId) {
             ensureCertificateChecked(state.cohortId);
           } else if (cachedCertificate) {
-            body += `<div class="trn-reg-line" style="color:var(--success);font-weight:600;">🎓 Certificate earned — ${cachedCertificate.certificateNumber}</div>`;
+            body += `<div class="trn-reg-line" style="color:var(--success);font-weight:600;">🎓 Certificate earned: ${cachedCertificate.certificateNumber}</div>`;
             body += `<div class="trn-reg-actions"><a class="btn-trn btn-trn-primary" href="${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ACADEMY_COMMERCE.CERTIFICATES}/${encodeURIComponent(cachedCertificate.certificateNumber)}/download" target="_blank" rel="noopener">Download Certificate (PDF)</a></div>`;
           }
           const escA = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -354,7 +354,7 @@ window.HAIRLUX_PUBLIC_PAGE = true;
             const preFirst = state.nameFirst || profile.firstName || '';
             const preLast = state.nameLast || profile.lastName || '';
             if (idStatus === 'FAILED') {
-              body += `<div class="trn-reg-line" style="color:var(--danger,#c0392b);font-weight:600;">Identity verification failed — please double-check your NIN and name, then try again.</div>`;
+              body += `<div class="trn-reg-line" style="color:var(--danger,#c0392b);font-weight:600;">Identity verification failed: please double-check your NIN and name, then try again.</div>`;
             }
             body += `
               <form id="identityForm" class="trn-id-form" novalidate>
@@ -364,7 +364,7 @@ window.HAIRLUX_PUBLIC_PAGE = true;
                   <div class="form-group"><label for="idFirstName">First Name</label><input type="text" id="idFirstName" autocomplete="given-name" value="${escA(preFirst)}" required /></div>
                   <div class="form-group"><label for="idLastName">Last Name</label><input type="text" id="idLastName" autocomplete="family-name" value="${escA(preLast)}" required /></div>
                 </div>
-                <div class="form-hint">Prefilled from your profile — edit to match the name on your NIN if needed. The name you confirm here is used on your certificate and ID card for this training.</div>
+                <div class="form-hint">Prefilled from your profile: edit to match the name on your NIN if needed. The name you confirm here is used on your certificate and ID card for this training.</div>
                 <div class="form-error" id="idError"></div>
                 <div><button type="submit" class="btn-trn btn-trn-primary" id="idSubmit">Verify Identity</button></div>
               </form>`;
@@ -418,7 +418,7 @@ window.HAIRLUX_PUBLIC_PAGE = true;
               if (idResult && idResult.status === 'VERIFIED') {
                 toast('Identity verified!');
               } else {
-                toast('Identity verification failed — please check your details and try again.', 'error');
+                toast('Identity verification failed: please check your details and try again.', 'error');
               }
             } catch (err) {
               idError.textContent = errMsg(err, 'Could not verify identity.');
@@ -487,9 +487,9 @@ window.HAIRLUX_PUBLIC_PAGE = true;
 
         try {
           await AcademyTrainingAPI.verifyPayment(state.registrationId);
-          toast('Payment verified — registration confirmed!');
+          toast('Payment verified: registration confirmed!');
         } catch (err) {
-          toast(errMsg(err, 'Could not verify payment automatically — use "I\'ve Completed Payment" below.'), 'error');
+          toast(errMsg(err, 'Could not verify payment automatically: use "I\'ve Completed Payment" below.'), 'error');
         }
         await refreshRegistrationDetail(state.registrationId);
       }

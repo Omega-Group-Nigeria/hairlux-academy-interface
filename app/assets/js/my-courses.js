@@ -29,7 +29,7 @@
               <div class="crs-progress-mini"><div class="crs-progress-mini-fill" style="width:${pct}%;"></div></div>
               <div class="crs-card-meta"><span>${pct}% complete</span>${a.access.expiresAt ? `<span>Access until ${new Date(a.access.expiresAt).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' })}</span>` : ''}</div>
               ${isComplete && a.access.course.certificateEnabled ? (certsByCourseId[a.access.courseId]
-                ? `<div class="crs-cert-badge">🎓 Certificate earned — ${esc(certsByCourseId[a.access.courseId].certificateNumber)}</div>`
+                ? `<div class="crs-cert-badge">🎓 Certificate earned: ${esc(certsByCourseId[a.access.courseId].certificateNumber)}</div>`
                 : '<div class="crs-cert-badge">🎓 Certificate earned</div>') : ''}
               <button class="btn-crs btn-crs-primary btn-crs-block" data-action="${isComplete ? 'review' : 'continue'}">${isComplete ? 'Review Course' : 'Continue Learning'}</button>
             </div>`;
