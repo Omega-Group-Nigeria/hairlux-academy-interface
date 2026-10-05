@@ -170,12 +170,12 @@
 
       function blockedMarkup(state) {
         if (state.blockedReason === 'PASSED' || state.alreadyPassed) {
-          const score = state.bestPassingScore != null ? ` — score ${state.bestPassingScore}%` : '';
+          const score = state.bestPassingScore != null ? `: score ${state.bestPassingScore}%` : '';
           return `<div class="crs-assessment-result is-passed">✓ Passed${score}</div>
             <div class="form-hint" style="margin-top:8px;">You've passed this assessment, so it can't be retaken.</div>`;
         }
         const last = state.lastResult
-          ? `<div class="crs-assessment-result is-failed">✗ Not passed — score ${state.lastResult.score}% (passing score ${state.passingScore}%)</div>`
+          ? `<div class="crs-assessment-result is-failed">✗ Not passed: score ${state.lastResult.score}% (passing score ${state.passingScore}%)</div>`
           : '';
         const why = state.blockedReason === 'NO_RETAKES'
           ? 'Retakes are not allowed for this assessment.'
@@ -198,7 +198,7 @@
             return;
           }
           const lastFail = state.lastResult && !state.lastResult.passed
-            ? `<div class="crs-assessment-result is-failed" style="margin-bottom:12px;">✗ Last attempt not passed — score ${state.lastResult.score}%. You can try again.</div>`
+            ? `<div class="crs-assessment-result is-failed" style="margin-bottom:12px;">✗ Last attempt not passed: score ${state.lastResult.score}%. You can try again.</div>`
             : '';
           pane.innerHTML = `
             <h2>Assessment</h2>
@@ -271,11 +271,11 @@
               const retry = fresh.canAttempt
                 ? `<div style="margin-top:10px;"><button class="btn-crs btn-crs-outline" id="btnRetake">Retake Assessment (${fresh.attemptsRemaining} left)</button></div>`
                 : `<div class="empty-state" style="margin-top:10px;">${fresh.blockedReason === 'NO_RETAKES' ? 'Retakes are not allowed for this assessment.' : 'No attempts remaining for this assessment.'}</div>`;
-              resultBox.innerHTML = `<div class="crs-assessment-result is-failed">✗ Not passed — score ${result.score}% (passing score ${fresh.passingScore}%)</div>${retry}`;
+              resultBox.innerHTML = `<div class="crs-assessment-result is-failed">✗ Not passed: score ${result.score}% (passing score ${fresh.passingScore}%)</div>${retry}`;
               const retakeBtn = document.getElementById('btnRetake');
               if (retakeBtn) retakeBtn.addEventListener('click', () => loadAssessmentPane(assessmentId));
             } else {
-              resultBox.innerHTML = `<div class="form-hint">Attempt submitted — results are released separately for this assessment.</div>`;
+              resultBox.innerHTML = `<div class="form-hint">Attempt submitted: results are released separately for this assessment.</div>`;
             }
           } catch (err) {
             toast(errMsg(err, 'Could not submit attempt.'), 'error');

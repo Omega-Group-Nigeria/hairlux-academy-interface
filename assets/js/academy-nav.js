@@ -1,5 +1,5 @@
 /**
- * Hairlux Academy — Guest-Friendly Nav Auth
+ * Hairlux Academy: Guest-Friendly Nav Auth
  * For top-level Academy pages (index/courses/course-detail/training) that must
  * stay browsable by logged-out visitors. Mirrors the main site's
  * app-guest-auth.js pattern: never redirects, only toggles the pre-existing

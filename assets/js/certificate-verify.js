@@ -14,9 +14,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
   const fmtDate = (iso) => {
-    if (!iso) return '—';
+    if (!iso) return '-';
     const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return '—';
+    if (Number.isNaN(d.getTime())) return '-';
     return d.toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
@@ -67,11 +67,11 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
           <div class="cv-row">
             <span class="cv-row-label">Issued To</span>
-            <span class="cv-row-value">${esc(cert.holderName || '—')}</span>
+            <span class="cv-row-value">${esc(cert.holderName || '-')}</span>
           </div>
           <div class="cv-row">
             <span class="cv-row-label">Programme</span>
-            <span class="cv-row-value">${esc(cert.programName || '—')}</span>
+            <span class="cv-row-value">${esc(cert.programName || '-')}</span>
           </div>
           <div class="cv-row">
             <span class="cv-row-label">Type</span>

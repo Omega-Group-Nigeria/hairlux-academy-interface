@@ -87,7 +87,7 @@
         try {
           coursesCache = await AcademyCoursesAPI.listCourses({});
           if (!coursesCache.length) {
-            grid.innerHTML = '<div class="empty-state">No courses are published yet — check back soon.</div>';
+            grid.innerHTML = '<div class="empty-state">No courses are published yet: check back soon.</div>';
             return;
           }
           const categories = Array.from(new Set(coursesCache.map(c => c.category).filter(Boolean)));

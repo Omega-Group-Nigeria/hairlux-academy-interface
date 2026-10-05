@@ -51,7 +51,7 @@
       (!q || (r.title + ' ' + (r.description || '') + ' ' + (r.category || '')).toLowerCase().includes(q)));
     const grid = $('resGrid');
     if (!resources.length) {
-      grid.innerHTML = '<div class="empty-state">New free resources are on the way &mdash; check back soon.</div>';
+      grid.innerHTML = '<div class="empty-state">New free resources are on the way: check back soon.</div>';
       return;
     }
     if (!list.length) {
@@ -187,7 +187,7 @@
     } catch (err) {
       let msg = (err && err.message) || 'Something went wrong. Please try again.';
       if (Array.isArray(msg)) msg = msg.join(' ');
-      if (err && err.status === 429) msg = 'Too many attempts — please wait a minute and try again.';
+      if (err && err.status === 429) msg = 'Too many attempts: please wait a minute and try again.';
       $('resFormErr').textContent = msg;
       $('resFormErr').classList.add('is-visible');
     } finally {
@@ -213,7 +213,7 @@
           if (card) { card.classList.add('is-highlight'); card.scrollIntoView({ block: 'center' }); }
           openModal(r);
         } else {
-          toast('That resource is no longer available — here’s everything else we have.', 'info');
+          toast('That resource is no longer available: here’s everything else we have.', 'info');
         }
       }
     } catch (err) {

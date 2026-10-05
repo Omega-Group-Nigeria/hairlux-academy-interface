@@ -2,7 +2,7 @@
   "id": "./index.html",
   "name": "Hairlux Academy",
   "short_name": "HX Academy",
-  "description": "Learn hair and beauty with Hairlux Academy — digital courses, in-branch training, free resources and your certificates, all in one app.",
+  "description": "Learn hair and beauty with Hairlux Academy: digital courses, in-branch training, free resources and your certificates, all in one app.",
   "start_url": "./index.html?source=pwa",
   "scope": "./",
   "display": "standalone",
