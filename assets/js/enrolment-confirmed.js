@@ -11,8 +11,9 @@
  *
  * Meta Pixel: the one event sent is Purchase, once an enrolment is
  * confirmed, with the reference as eventID so it is counted once (also
- * guarded per browser, so a reload does not send it again). The Pixel ID is
- * the one set in admin (Academy > Enrolments > Settings).
+ * guarded per browser, so a reload does not send it again). The Academy pixel
+ * (1639461031209777) is set up by the snippet at the bottom of the page,
+ * without PageView, same as booking-confirmed.html on the main site.
  */
 (function () {
   'use strict';
@@ -50,11 +51,13 @@
   // ─── Meta Pixel ───────────────────────────────────────────────────────
 
   function trackPurchase(r) {
-    if (!r.metaPixelId) return;
+    // The Academy pixel is set up by the snippet in the page; a Pixel ID set in
+    // admin is only used if that snippet is ever removed.
+    if (!window.fbq && r.metaPixelId) E.initPixel(r.metaPixelId, false);
+    if (!window.fbq) return;
     var key = 'hlx_academy_purchase_' + r.reference;
     if (seen(key)) return;
     try {
-      E.initPixel(r.metaPixelId, false);
       window.fbq('track', 'Purchase', {
         value: r.amountPaid,
         currency: 'NGN',
