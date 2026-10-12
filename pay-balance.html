@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Pay Your Training Balance | Hairlux Academy</title>
+  <meta name="description" content="Pay the balance on your Hairlux Academy in-branch training before your class starts." />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#14171c" media="(prefers-color-scheme: dark)" />
+  <link href="assets/img/logo-light.webp" rel="shortcut icon" type="image/x-icon" />
+  <script src="assets/js/theme-toggle.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet" />
+  <link href="assets/css/enrol.css" rel="stylesheet" />
+</head>
+
+<body>
+  <header class="lp-header">
+    <div class="wrap">
+      <a href="programmes.html" class="lp-logo" aria-label="Hairlux Academy programmes">
+        <img class="logo-light" src="assets/img/logo-side-black.png" alt="Hairlux" />
+        <img class="logo-dark" src="assets/img/logo-side-white.webp" alt="Hairlux" />
+        <span class="lp-logo-tag">Academy</span>
+      </a>
+      <div class="lp-header-actions">
+        <a class="lp-link" href="log-in.html">Sign in</a>
+        <button type="button" class="icon-btn" data-theme-toggle aria-pressed="false" aria-label="Toggle dark mode" title="Toggle dark mode">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="en-wrap">
+    <div class="en-done">
+      <form class="en-card" id="pbFind" novalidate>
+        <h1 class="serif" style="font-size:clamp(24px,4vw,30px);margin:0 0 6px">Pay your training balance</h1>
+        <p class="muted" style="margin:0 0 18px">Enter your registration code and the email you enrolled with.</p>
+        <div class="en-fields">
+          <div class="en-field full">
+            <label for="pbCode">Registration code</label>
+            <input id="pbCode" autocomplete="off" placeholder="HLA-IBA-2026-ABC123" maxlength="40" style="text-transform:uppercase" required />
+            <div class="hint">It is in your confirmation email.</div>
+          </div>
+          <div class="en-field full">
+            <label for="pbEmail">Email</label>
+            <input id="pbEmail" type="email" autocomplete="email" placeholder="you@example.com" maxlength="160" required />
+          </div>
+        </div>
+        <div id="pbFindError" class="en-error" role="alert"></div>
+        <button type="submit" class="en-btn" id="pbFindBtn">Find my registration</button>
+      </form>
+
+      <div class="en-card hidden" id="pbResult">
+        <h1 class="serif" style="font-size:clamp(22px,4vw,28px);margin:0 0 6px" id="pbTitle">Your training</h1>
+        <p class="muted" style="margin:0 0 14px" id="pbLead"></p>
+        <div id="pbRows"></div>
+        <div class="en-info" id="pbNote"></div>
+        <div id="pbPayError" class="en-error" role="alert"></div>
+        <button type="button" class="en-btn" id="pbPayBtn">Pay balance</button>
+        <div class="en-secure">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
+          Secure payment by Paystack (card, bank transfer or USSD)
+        </div>
+        <p class="en-note"><a href="#" id="pbBack">Use a different code</a></p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="lp-footer">
+    &copy; <span id="enYear"></span> Hairlux Academy &middot; <a href="programmes.html">Programmes</a> &middot; <a href="https://hairlux.com.ng/privacy-policy.html">Privacy</a> &middot; <a href="https://hairlux.com.ng/refund-policy.html">Refund policy</a> &middot; <a href="https://hairlux.com.ng/terms-of-service.html">Terms</a>
+  </footer>
+
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/enrol-common.js"></script>
+  <script src="assets/js/pay-balance.js"></script>
+</body>
+
+</html>

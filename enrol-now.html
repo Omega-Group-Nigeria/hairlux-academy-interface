@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Enrol Now | Hairlux Academy</title>
+  <meta name="description"
+    content="Enrol in Hairlux Academy in two minutes. Choose an in-branch training and class date, or an online course, and pay securely by Paystack." />
+  <meta name="robots" content="index, follow" />
+  <meta property="og:title" content="Enrol Now | Hairlux Academy" />
+  <meta property="og:description" content="Choose your programme and class date and secure your seat in two minutes." />
+  <meta property="og:type" content="website" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#14171c" media="(prefers-color-scheme: dark)" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link href="assets/img/logo-light.webp" rel="shortcut icon" type="image/x-icon" />
+  <link href="assets/img/pwa/apple-touch-icon.png" rel="apple-touch-icon" />
+  <script src="assets/js/theme-toggle.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet" />
+  <link href="assets/css/enrol.css" rel="stylesheet" />
+</head>
+
+<body>
+  <header class="lp-header">
+    <div class="wrap">
+      <a href="programmes.html" class="lp-logo" aria-label="Hairlux Academy programmes">
+        <img class="logo-light" src="assets/img/logo-side-black.png" alt="Hairlux" />
+        <img class="logo-dark" src="assets/img/logo-side-white.webp" alt="Hairlux" />
+        <span class="lp-logo-tag">Academy</span>
+      </a>
+      <div class="lp-header-actions">
+        <a class="lp-link" href="log-in.html">Sign in</a>
+        <button type="button" class="icon-btn" data-theme-toggle aria-pressed="false" aria-label="Toggle dark mode" title="Toggle dark mode">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="en-wrap">
+    <section id="enLoading" class="en-center">
+      <span class="en-spinner"></span>
+      <p style="color:var(--muted);margin-top:14px">Loading programmes&hellip;</p>
+    </section>
+
+    <section id="enUnavailable" class="en-center hidden">
+      <h1 class="serif" style="margin:0 0 8px">Online enrolment is paused</h1>
+      <p id="enUnavailableText" style="color:var(--muted);margin:0 auto 18px;max-width:460px">Please contact Hairlux Academy to enrol. We are sorry for the inconvenience.</p>
+      <a class="en-btn" href="https://hairlux.com.ng/contact.html" style="max-width:260px">Contact us</a>
+    </section>
+
+    <section id="enForm" class="hidden">
+      <div class="en-grid">
+        <div>
+          <div class="en-hero">
+            <h1>Enrol at Hairlux Academy</h1>
+            <p>Choose your programme, pick a class date and pay securely. Your registration code is emailed to you straight away.</p>
+            <div class="en-perks">
+              <span class="en-perk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5" /></svg><span id="enPerkDeposit">Seat held for you</span></span>
+              <span class="en-perk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5" /></svg>Hairlux certificate</span>
+              <span class="en-perk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5" /></svg>No sign-up needed</span>
+            </div>
+          </div>
+
+          <form id="enEnrolForm" class="en-card" style="margin-top:22px" novalidate>
+            <div class="en-step" style="margin-top:0">
+              <div class="en-step-head"><span class="en-step-num" data-num>1</span><span class="en-step-title">What do you want to learn?</span></div>
+              <div class="en-seg hidden" id="enKinds" role="radiogroup" aria-label="Programme type">
+                <button type="button" role="radio" data-kind="TRAINING" aria-checked="true">In-branch training</button>
+                <button type="button" role="radio" data-kind="COURSE" aria-checked="false">Online course</button>
+              </div>
+              <div id="enProgrammes" class="en-options two" role="radiogroup" aria-label="Programme"></div>
+            </div>
+
+            <div class="en-step" id="enStepClass">
+              <div class="en-step-head"><span class="en-step-num" data-num>2</span><span class="en-step-title">Choose a class date</span><span class="en-step-hint" id="enClassHint"></span></div>
+              <div id="enBranchFilter" class="filters hidden" role="toolbar" aria-label="Branch" style="margin-bottom:10px"></div>
+              <div id="enClasses" class="en-options" role="radiogroup" aria-label="Class date">
+                <div class="en-empty">Choose a training first to see its class dates.</div>
+              </div>
+            </div>
+
+            <div class="en-step hidden" id="enStepCourse">
+              <div class="en-step-head"><span class="en-step-num" data-num>2</span><span class="en-step-title">What you get</span></div>
+              <div id="enCourseInfo" class="en-note-inline" style="margin:0"></div>
+            </div>
+
+            <div class="en-step">
+              <div class="en-step-head"><span class="en-step-num" data-num>3</span><span class="en-step-title">Your details</span></div>
+              <div class="en-fields">
+                <div class="en-field full">
+                  <label for="enName">Full name</label>
+                  <input id="enName" name="fullName" autocomplete="name" maxlength="120" required />
+                  <div class="hint">As you want it on your certificate.</div>
+                </div>
+                <div class="en-field">
+                  <label for="enPhone">Phone number</label>
+                  <input id="enPhone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="0803 123 4567" maxlength="20" required />
+                </div>
+                <div class="en-field">
+                  <label for="enEmail">Email</label>
+                  <input id="enEmail" name="email" type="email" autocomplete="email" placeholder="you@example.com" maxlength="160" required />
+                  <div class="hint">Your registration code and receipt are sent here.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="en-step hidden" id="enStepPay">
+              <div class="en-step-head"><span class="en-step-num" data-num>4</span><span class="en-step-title">How much to pay now</span></div>
+              <div id="enPayOptions" class="en-options two" role="radiogroup" aria-label="Payment"></div>
+            </div>
+
+            <details class="en-discount" id="enDiscount">
+              <summary>Have a discount code?</summary>
+              <div class="en-discount-row">
+                <input id="enDiscountCode" maxlength="40" placeholder="Enter code" autocomplete="off" aria-label="Discount code" />
+                <button type="button" class="btn btn-ghost btn-small" id="enDiscountApply">Apply</button>
+              </div>
+              <div class="en-discount-msg" id="enDiscountMsg" role="status"></div>
+            </details>
+
+            <label class="en-terms">
+              <input type="checkbox" id="enTerms" />
+              <span>I agree to the Hairlux Academy <a href="https://hairlux.com.ng/terms-of-service.html" target="_blank" rel="noopener">terms</a> and <a href="https://hairlux.com.ng/refund-policy.html" target="_blank" rel="noopener">refund policy</a>.</span>
+            </label>
+
+            <div id="enFormError" class="en-error" role="alert"></div>
+          </form>
+        </div>
+
+        <aside class="en-aside">
+          <div class="en-card en-summary">
+            <h3>Your enrolment</h3>
+            <div class="en-row"><span>Programme</span><span id="sumProgramme">Not chosen</span></div>
+            <div class="en-row" id="sumClassRow"><span>Class</span><span id="sumClass">Not chosen</span></div>
+            <div class="en-row total"><span>Fee</span><span id="sumFee">&#8358;0</span></div>
+            <div class="en-row hidden" id="sumDiscountRow"><span id="sumDiscountLabel">Discount</span><span id="sumDiscount">&#8358;0</span></div>
+            <div class="en-row hidden" id="sumBalanceRow"><span id="sumBalanceLabel">Balance before the class</span><span id="sumBalance">&#8358;0</span></div>
+            <div class="en-row pay"><span>Pay now</span><span id="sumPayNow">&#8358;0</span></div>
+            <button type="submit" form="enEnrolForm" class="en-btn" id="enPayBtn" disabled>Choose a programme</button>
+            <div class="en-secure">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
+              Secure payment by Paystack (card, bank transfer or USSD)
+            </div>
+            <p class="en-note" id="enPolicyNote">Your seat is held for 30 minutes while you pay.</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <div class="en-mobile-bar hidden" id="enMobileBar">
+    <div class="amt">Pay now<strong id="barPayNow">&#8358;0</strong></div>
+    <button type="submit" form="enEnrolForm" class="en-btn" id="enPayBtnMobile" disabled>Continue</button>
+  </div>
+
+  <footer class="lp-footer">
+    &copy; <span id="enYear"></span> Hairlux Academy &middot; <a href="programmes.html">Programmes</a> &middot; <a href="https://hairlux.com.ng/privacy-policy.html">Privacy</a> &middot; <a href="https://hairlux.com.ng/refund-policy.html">Refund policy</a> &middot; <a href="https://hairlux.com.ng/terms-of-service.html">Terms</a>
+  </footer>
+
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/enrol-common.js"></script>
+  <script src="assets/js/enrol-now.js"></script>
+
+  <!-- Meta Pixel Code (Hairlux Academy) -->
+  <script>
+    !function (f, b, e, v, n, t, s) {
+      if (f.fbq) return; n = f.fbq = function () {
+        n.callMethod ?
+        n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+      };
+      if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0';
+      n.queue = []; t = b.createElement(e); t.async = !0;
+      t.src = v; s = b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t, s)
+    }(window, document, 'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '1639461031209777');
+    // No PageView here: nothing is sent from this page. Purchase is sent from the thank-you page.
+  </script>
+  <!-- End Meta Pixel Code -->
+</body>
+
+</html>

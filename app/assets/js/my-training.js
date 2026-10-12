@@ -63,8 +63,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       r.cohort.trainerName ? ['Trainer', r.cohort.trainerName] : null,
     ].filter(Boolean);
 
+    // Enrolled with a deposit: the balance is due before the class starts.
+    const owing = confirmed && Number(r.balanceDue) > 0 && stage !== 'CLOSED';
+    const payBalanceLink = `../pay-balance.html?code=${encodeURIComponent(r.registrationCode)}`;
+
     let notes = '';
-    if (stage === 'PENDING_PAYMENT') {
+    if (owing) {
+      notes = `<div class="trn-card-note">Balance ${money(r.balanceDue)} due before ${fmtDate(r.balanceDueAt || r.cohort.startDate)}. You cannot be marked present until it is paid.</div>`;
+    } else if (stage === 'PENDING_PAYMENT') {
       notes = `<div class="trn-card-note">Payment not confirmed${r.order ? ` · ${money(r.order.amount)}` : ''}${r.expiresAt ? ` · seat held until ${fmtDate(r.expiresAt)}` : ''}</div>`;
     } else if (stage === 'WAITLISTED') {
       notes = `<div class="crs-card-meta"><span>You're on the waitlist: we'll email you if a seat opens up.</span></div>`;
@@ -89,6 +95,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       : (stage === 'COMPLETED' && r.training.certificationEnabled ? '<div class="crs-card-meta"><span>Certificate will appear here once issued.</span></div>' : '');
 
     const actions = [];
+    if (owing) actions.push(`<a class="btn-crs btn-crs-primary" href="${payBalanceLink}">Pay Balance</a>`);
     if (stage === 'PENDING_PAYMENT') {
       actions.push(`<a class="btn-crs btn-crs-primary" href="${regLink(r)}">Complete Payment</a>`);
     } else if (stage === 'CLOSED') {
