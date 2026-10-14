@@ -53,11 +53,13 @@ const AcademyTrainingAPI = {
    * cohort.status yourself.
    * @param {string} cohortId
    * @param {string} [discountCode]
+   * @param {boolean} [withAccommodation] book a bed (charged separately, subject to availability)
    * @returns {Promise<object>} { registration, waitlisted, authorizationUrl, payment? }
    */
-  async register(cohortId, discountCode) {
+  async register(cohortId, discountCode, withAccommodation) {
     const body = { cohortId };
     if (discountCode) body.discountCode = discountCode;
+    if (withAccommodation) body.withAccommodation = true;
     const res = await APIHelper.request(API_CONFIG.ENDPOINTS.ACADEMY_TRAINING.REGISTRATIONS, {
       method: 'POST',
       body: JSON.stringify(body)

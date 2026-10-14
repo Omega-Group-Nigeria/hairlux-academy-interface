@@ -20,6 +20,16 @@ window.HAIRLUX_PUBLIC_PAGE = true;
       };
       // ── Helpers ──────────────────────────────────────────────────
       const fmtNaira = (n) => '₦' + Number(n || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      /** "Mon, Wed, Fri, 9:00am to 3:00pm" from the cohort's own schedule (served ready-made by the API). */
+      const cohortSchedule = (c) => {
+        const s = c.schedule || {};
+        return [s.daysLabel, s.hoursLabel].filter(Boolean).join(', ');
+      };
+      /** Price now, with the normal price struck through while a promotion runs. */
+      const priceHtml = (t) => (t && t.promo && t.regularPrice > t.price)
+        ? `${fmtNaira(t.price)}<s>${fmtNaira(t.regularPrice)}</s>`
+        : fmtNaira(t ? t.price : 0);
       const fmtDate  = (iso) => {
         if (!iso) return '-';
         const d = new Date(iso);
@@ -81,6 +91,10 @@ window.HAIRLUX_PUBLIC_PAGE = true;
       function renderTrainingsGrid() {
         const grid = document.getElementById('trainingsGrid');
         const list = filteredTrainings();
+        // Take the dates panel out before the grid is rebuilt; it goes back under
+        // the open programme's card at the end (or stays hidden if a search hides it).
+        parkCohortsPanel();
+        cohortsPanel.style.display = 'none';
         if (!trainingsCache.length) {
           grid.innerHTML = '<div class="empty-state">No programmes are published yet: check back soon.</div>';
           return;
@@ -91,26 +105,102 @@ window.HAIRLUX_PUBLIC_PAGE = true;
         }
         grid.innerHTML = list.map(t => {
           const moduleCount = Array.isArray(t.curriculumModules) ? t.curriculumModules.length : 0;
+          const chips = [];
+          if (t.durationLabel) chips.push(esc(t.durationLabel));
+          if (t.kitOption === 'INCLUDED') chips.push('Starter kit included');
+          else if (t.kitOption === 'OPTIONAL') chips.push('Starter kit available');
+          const open = t.id === selectedTrainingId;
           return `
-            <div class="trn-card" data-id="${t.id}">
+            <div class="trn-card${open ? ' is-active' : ''}" data-id="${t.id}" role="button" tabindex="0" aria-controls="cohortsPanel" aria-expanded="${open ? 'true' : 'false'}">
               ${t.coverImageUrl ? `<img src="${t.coverImageUrl}" alt="" class="trn-card-image" style="width:100%;height:140px;object-fit:cover;border-radius:8px;margin-bottom:10px;">` : ''}
               <div class="trn-card-top">
                 <div class="trn-card-name">${t.name}</div>
                 ${t.category ? `<span class="trn-card-category">${t.category}</span>` : ''}
               </div>
+              ${t.promo ? `<div><span class="trn-card-promo">Promo${t.promo.endsAt ? ` until ${fmtDate(t.promo.endsAt)}` : ''}</span></div>` : ''}
               <div class="trn-card-desc">${textPreview(t.description) || 'No description provided yet.'}</div>
+              ${chips.length ? `<div class="trn-card-chips">${chips.map(c => `<span>${c}</span>`).join('')}</div>` : ''}
               ${moduleCount ? `<div class="trn-card-modules">${moduleCount} curriculum module${moduleCount === 1 ? '' : 's'}</div>` : ''}
               <div class="trn-card-bottom">
-                <div class="trn-card-price">${fmtNaira(t.price)}</div>
+                <div class="trn-card-price">${priceHtml(t)}</div>
                 ${t.certificationEnabled ? '<div class="trn-card-cert">\u{1F393} Certificate included</div>' : ''}
               </div>
+              <div class="trn-card-toggle"><span>${open ? 'Hide class dates' : 'View class dates'}</span>${CHEVRON}</div>
             </div>`;
         }).join('');
 
         grid.querySelectorAll('.trn-card').forEach(card => {
-          card.addEventListener('click', () => selectTraining(card.dataset.id));
+          card.addEventListener('click', () => toggleTraining(card.dataset.id));
+          card.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleTraining(card.dataset.id); }
+          });
+        });
+
+        // Keep the open programme's dates under its card (hidden while a search hides the card).
+        if (selectedTrainingId) cohortsPanel.style.display = placeCohortsPanel() ? '' : 'none';
+      }
+
+      // ── Class dates open under the clicked programme ────────────
+      // The dates panel is moved into the grid as a full-width row right after
+      // the row holding the clicked card (directly under the card on phones),
+      // so it opens like a dropdown instead of at the bottom of the page.
+      const CHEVRON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+      const cohortsPanel = document.getElementById('cohortsPanel');
+      const cohortsPanelHome = cohortsPanel.parentNode;
+      const cohortsPanelNext = cohortsPanel.nextSibling;
+
+      function parkCohortsPanel() {
+        if (cohortsPanel.parentNode !== cohortsPanelHome) cohortsPanelHome.insertBefore(cohortsPanel, cohortsPanelNext);
+      }
+
+      /** Puts the panel under the selected card's row. False when the card is not on screen. */
+      function placeCohortsPanel() {
+        const grid = document.getElementById('trainingsGrid');
+        const cards = Array.from(grid.querySelectorAll('.trn-card'));
+        const index = cards.findIndex(c => c.dataset.id === selectedTrainingId);
+        if (index === -1) { parkCohortsPanel(); return false; }
+        const cols = Math.max(1, getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length);
+        const rowEnd = Math.min(Math.floor(index / cols) * cols + cols - 1, cards.length - 1);
+        cards[rowEnd].after(cohortsPanel);
+        // Point the panel's arrow at the clicked card.
+        const gridBox = grid.getBoundingClientRect();
+        const cardBox = cards[index].getBoundingClientRect();
+        cohortsPanel.style.setProperty('--trn-caret-left', `${Math.round(cardBox.left - gridBox.left + cardBox.width / 2)}px`);
+        return true;
+      }
+
+      function syncCardStates() {
+        document.querySelectorAll('.trn-card').forEach(c => {
+          const open = c.dataset.id === selectedTrainingId;
+          c.classList.toggle('is-active', open);
+          c.setAttribute('aria-expanded', open ? 'true' : 'false');
+          const label = c.querySelector('.trn-card-toggle span');
+          if (label) label.textContent = open ? 'Hide class dates' : 'View class dates';
         });
       }
+
+      function closeCohortsPanel() {
+        selectedTrainingId = null;
+        cohortsPanel.style.display = 'none';
+        parkCohortsPanel();
+        syncCardStates();
+      }
+
+      /** Clicking the open programme again closes its dates. */
+      function toggleTraining(trainingId) {
+        if (trainingId === selectedTrainingId && cohortsPanel.style.display !== 'none') closeCohortsPanel();
+        else selectTraining(trainingId);
+      }
+
+      document.getElementById('cohortsClose').addEventListener('click', closeCohortsPanel);
+
+      let panelResizeTimer = null;
+      window.addEventListener('resize', () => {
+        clearTimeout(panelResizeTimer);
+        panelResizeTimer = setTimeout(() => {
+          if (selectedTrainingId && cohortsPanel.style.display !== 'none') placeCohortsPanel();
+        }, 120);
+      });
 
       async function loadTrainings() {
         const grid = document.getElementById('trainingsGrid');
@@ -126,7 +216,7 @@ window.HAIRLUX_PUBLIC_PAGE = true;
       // ── Cohorts for a selected training ─────────────────────────
       async function selectTraining(trainingId) {
         selectedTrainingId = trainingId;
-        document.querySelectorAll('.trn-card').forEach(c => c.classList.toggle('is-active', c.dataset.id === trainingId));
+        syncCardStates();
 
         const training = trainingsCache.find(t => t.id === trainingId);
         const panel = document.getElementById('cohortsPanel');
@@ -134,9 +224,12 @@ window.HAIRLUX_PUBLIC_PAGE = true;
         const title = document.getElementById('cohortsTitle');
         const branchFilter = document.getElementById('branchFilter');
 
-        title.textContent = training ? `Cohorts: ${training.name}` : 'Cohorts';
+        title.textContent = training ? `Class dates: ${training.name}` : 'Class dates';
+        renderTrainingDetails(training);
+        branchFilter.value = '';
+        list.innerHTML = '<div class="empty-state">Loading class dates…</div>';
+        placeCohortsPanel();
         panel.style.display = '';
-        list.innerHTML = '<div class="empty-state">Loading cohorts…</div>';
         panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
         try {
@@ -148,8 +241,43 @@ window.HAIRLUX_PUBLIC_PAGE = true;
 
           renderCohorts('');
         } catch (err) {
-          list.innerHTML = '<div class="empty-state">Could not load cohorts for this programme.</div>';
+          list.innerHTML = '<div class="empty-state">Could not load class dates for this programme.</div>';
         }
+      }
+
+      /** Benefits, starter kit and curriculum (grouped by week or day when the training is set up that way). */
+      function renderTrainingDetails(t) {
+        const box = document.getElementById('trainingDetails');
+        if (!box) return;
+        if (!t) { box.style.display = 'none'; box.innerHTML = ''; return; }
+        let html = '';
+        if (Array.isArray(t.benefits) && t.benefits.length) {
+          html += `<h4>What is included</h4><ul class="trn-benefits">${t.benefits.map(b => `<li>${esc(b)}</li>`).join('')}</ul>`;
+        }
+        if (t.kitOption && t.kitOption !== 'NOT_AVAILABLE') {
+          html += `<div class="trn-kit"><strong>${t.kitOption === 'INCLUDED' ? 'Starter kit (included)' : 'Starter kit (optional, not in the fee)'}:</strong> ${esc(t.kitDescription || '')}</div>`;
+        }
+        const mods = (t.curriculumModules || []).slice().sort((a, b) => a.order - b.order);
+        if (mods.length) {
+          const word = t.curriculumLayout === 'WEEKS' ? 'Week' : t.curriculumLayout === 'DAYS' ? 'Day' : '';
+          let body;
+          if (word) {
+            const groups = [];
+            const byKey = {};
+            mods.forEach(m => {
+              const k = m.period ? String(m.period) : 'other';
+              if (!byKey[k]) { byKey[k] = { period: m.period, items: [] }; groups.push(byKey[k]); }
+              byKey[k].items.push(m);
+            });
+            groups.sort((a, b) => (a.period || 9999) - (b.period || 9999));
+            body = groups.map(g => `<div class="trn-week"><strong>${g.period ? `${word} ${g.period}` : 'Also covered'}</strong><ol>${g.items.map(m => `<li>${esc(m.name)}</li>`).join('')}</ol></div>`).join('');
+          } else {
+            body = `<ol>${mods.map(m => `<li>${esc(m.name)}</li>`).join('')}</ol>`;
+          }
+          html += `<details><summary>Curriculum (${mods.length} module${mods.length === 1 ? '' : 's'}${t.durationLabel ? `, ${esc(t.durationLabel)}` : ''})</summary>${body}</details>`;
+        }
+        box.innerHTML = html;
+        box.style.display = html ? '' : 'none';
       }
 
       function renderCohorts(branchName) {
@@ -159,7 +287,10 @@ window.HAIRLUX_PUBLIC_PAGE = true;
           : cohortsCache;
 
         if (!filtered.length) {
-          list.innerHTML = '<div class="empty-state">No open cohorts right now for this programme.</div>';
+          // Same wording as the enrolment page: past classes and closed registration windows are not listed.
+          list.innerHTML = branchName && cohortsCache.length
+            ? '<div class="empty-state">No class dates at this branch right now.</div>'
+            : '<div class="empty-state">New dates coming soon. Check back shortly or contact Hairlux Academy.</div>';
           return;
         }
 
@@ -172,6 +303,13 @@ window.HAIRLUX_PUBLIC_PAGE = true;
               <div class="trn-cohort-info">
                 <div class="trn-cohort-name">${c.name}</div>
                 <div class="trn-cohort-meta">${(c.branch && c.branch.name) || 'Branch TBC'} · ${fmtDate(c.startDate)} – ${fmtDate(c.endDate)} · up to ${c.capacityMax} seats</div>
+                ${cohortSchedule(c) || c.instructor || c.accommodation ? `<div class="trn-cohort-meta">${[
+                  cohortSchedule(c) ? esc(cohortSchedule(c)) : '',
+                  c.instructor ? `Instructor: ${esc(c.instructor)}` : '',
+                  c.accommodation ? (c.accommodation.available
+                    ? `Accommodation ${c.accommodation.free ? 'included' : fmtNaira(c.accommodation.fee)} (${c.accommodation.bedsLeft} ${c.accommodation.bedsLeft === 1 ? 'bed' : 'beds'} left)`
+                    : 'Accommodation fully booked') : '',
+                ].filter(Boolean).join(' · ')}</div>` : ''}
               </div>
               <div class="trn-cohort-actions">
                 <span class="trn-pill trn-pill-${c.status}">${c.status}</span>
@@ -213,20 +351,56 @@ window.HAIRLUX_PUBLIC_PAGE = true;
         discountError.classList.remove('is-visible');
 
         const training = cohort.training || trainingsCache.find(t => t.id === selectedTrainingId) || {};
-        const price = Number(training.price || 0);
         registerSummary.innerHTML = `
           <div><strong>${training.name || 'Training'}</strong></div>
           <div style="margin:4px 0;">${cohort.name} · ${(cohort.branch && cohort.branch.name) || ''}</div>
           <div style="margin:4px 0;">${fmtDate(cohort.startDate)} – ${fmtDate(cohort.endDate)}</div>
-          <div class="trn-summary-price" id="registerPrice">${fmtNaira(price)}</div>
+          ${cohortSchedule(cohort) ? `<div style="margin:4px 0;">${esc(cohortSchedule(cohort))}</div>` : ''}
+          <div class="trn-summary-price" id="registerPrice"></div>
+          <div class="form-hint" id="registerPriceBreakdown"></div>
           ${cohort.status === 'FULL' ? '<div class="form-hint" style="margin-top:8px;">This cohort is full: registering will add you to the waitlist instead.</div>' : ''}
         `;
+
+        // Accommodation: a separate charge (not discounted), only while beds are left and the class has seats.
+        const acc = cohort.accommodation;
+        const accGroup = document.getElementById('accommodationGroup');
+        const accBox = document.getElementById('withAccommodation');
+        accBox.checked = false;
+        accGroup.style.display = acc && cohort.status !== 'FULL' ? '' : 'none';
+        if (acc) {
+          accBox.disabled = !acc.available;
+          document.getElementById('accommodationLabel').textContent = acc.available
+            ? `Book a bed in the class accommodation: ${acc.free ? 'included' : fmtNaira(acc.fee)}`
+            : 'Accommodation is fully booked for this class';
+          document.getElementById('accommodationHint').textContent = acc.available
+            ? `${acc.bedsLeft} ${acc.bedsLeft === 1 ? 'bed' : 'beds'} left.${acc.note ? ' ' + acc.note.replace(/[.!]?\s*$/, '.') : ''}${acc.free ? '' : ' Paid with your training fee, shown separately.'}`
+            : '';
+        }
+        updateRegisterPrice();
 
         document.getElementById('registerTitle').textContent = cohort.status === 'FULL' ? 'Join Waitlist' : 'Register';
         registerSubmit.textContent = cohort.status === 'FULL' ? 'Join Waitlist' : 'Confirm Registration';
         registerOverlay.classList.add('open');
       }
       function closeRegisterModal() { registerOverlay.classList.remove('open'); }
+
+      /** Training fee (after any discount) plus accommodation when chosen. */
+      function updateRegisterPrice() {
+        if (!selectedCohort) return;
+        const training = selectedCohort.training || trainingsCache.find(t => t.id === selectedTrainingId) || {};
+        const trainingFee = appliedDiscount ? Number(appliedDiscount.finalAmount) : Number(training.price || 0);
+        const acc = selectedCohort.accommodation;
+        const withAcc = !!(acc && acc.available && document.getElementById('withAccommodation').checked);
+        const accFee = withAcc ? Number(acc.fee || 0) : 0;
+        const priceEl = document.getElementById('registerPrice');
+        if (priceEl) priceEl.innerHTML = (training.promo && !appliedDiscount && !withAcc) ? priceHtml(training) : fmtNaira(trainingFee + accFee);
+        const parts = [];
+        if (training.promo) parts.push(`Promo price ${fmtNaira(training.price)} (normally ${fmtNaira(training.regularPrice)})`);
+        if (withAcc) parts.push(`Training ${fmtNaira(trainingFee)} + accommodation ${accFee > 0 ? fmtNaira(accFee) : 'included'}`);
+        const breakdown = document.getElementById('registerPriceBreakdown');
+        if (breakdown) breakdown.textContent = parts.join(' · ');
+      }
+      document.getElementById('withAccommodation').addEventListener('change', updateRegisterPrice);
 
       document.getElementById('registerClose').addEventListener('click', closeRegisterModal);
       document.getElementById('registerCancel').addEventListener('click', closeRegisterModal);
@@ -243,9 +417,8 @@ window.HAIRLUX_PUBLIC_PAGE = true;
         try {
           const result = await AcademyTrainingAPI.validateDiscountCode(code, price);
           appliedDiscount = { code, ...result };
-          discountHint.textContent = `${result.name || code}: −${fmtNaira(result.discountAmount)}: you pay ${fmtNaira(result.finalAmount)}`;
-          const priceEl = document.getElementById('registerPrice');
-          if (priceEl) priceEl.textContent = fmtNaira(result.finalAmount);
+          discountHint.textContent = `${result.name || code}: −${fmtNaira(result.discountAmount)} off the training fee: ${fmtNaira(result.finalAmount)}`;
+          updateRegisterPrice();
         } catch (err) {
           appliedDiscount = null;
           discountError.textContent = errMsg(err, 'That code is not valid.');
@@ -259,7 +432,9 @@ window.HAIRLUX_PUBLIC_PAGE = true;
 
         UIHelper.setButtonLoading(registerSubmit, true);
         try {
-          const result = await AcademyTrainingAPI.register(selectedCohort.id, appliedDiscount ? appliedDiscount.code : undefined);
+          const accBox = document.getElementById('withAccommodation');
+          const withAccommodation = !!(selectedCohort.accommodation && selectedCohort.accommodation.available && accBox.checked);
+          const result = await AcademyTrainingAPI.register(selectedCohort.id, appliedDiscount ? appliedDiscount.code : undefined, withAccommodation);
           const training = selectedCohort.training || trainingsCache.find(t => t.id === selectedTrainingId) || {};
 
           if (result.waitlisted) {

@@ -21,6 +21,26 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet" />
   <link href="assets/css/enrol.css" rel="stylesheet" />
+  <!-- Meta Pixel Code (Hairlux Academy) -->
+  <script>
+    !function (f, b, e, v, n, t, s) {
+      if (f.fbq) return; n = f.fbq = function () {
+        n.callMethod ?
+        n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+      };
+      if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0';
+      n.queue = []; t = b.createElement(e); t.async = !0;
+      t.src = v; s = b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t, s)
+    }(window, document, 'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '1639461031209777');
+    fbq('track', 'PageView');
+    // PageView on arrival. Purchase is sent from enrolment-confirmed.html once payment is confirmed.
+  </script>
+  <noscript><img height="1" width="1" style="display:none" alt=""
+      src="https://www.facebook.com/tr?id=1639461031209777&ev=PageView&noscript=1" /></noscript>
+  <!-- End Meta Pixel Code -->
 </head>
 
 <body>
@@ -73,6 +93,7 @@
                 <button type="button" role="radio" data-kind="COURSE" aria-checked="false">Online course</button>
               </div>
               <div id="enProgrammes" class="en-options two" role="radiogroup" aria-label="Programme"></div>
+              <div id="enTrainingDetails" class="en-details hidden"></div>
             </div>
 
             <div class="en-step" id="enStepClass">
@@ -81,6 +102,12 @@
               <div id="enClasses" class="en-options" role="radiogroup" aria-label="Class date">
                 <div class="en-empty">Choose a training first to see its class dates.</div>
               </div>
+            </div>
+
+            <div class="en-step hidden" id="enStepAcc">
+              <div class="en-step-head"><span class="en-step-num" data-num>3</span><span class="en-step-title">Accommodation</span><span class="en-step-hint" id="enAccHint"></span></div>
+              <div id="enAccNote" class="en-note-inline hidden"></div>
+              <div id="enAccOptions" class="en-options two" role="radiogroup" aria-label="Accommodation"></div>
             </div>
 
             <div class="en-step hidden" id="enStepCourse">
@@ -136,8 +163,10 @@
             <h3>Your enrolment</h3>
             <div class="en-row"><span>Programme</span><span id="sumProgramme">Not chosen</span></div>
             <div class="en-row" id="sumClassRow"><span>Class</span><span id="sumClass">Not chosen</span></div>
-            <div class="en-row total"><span>Fee</span><span id="sumFee">&#8358;0</span></div>
+            <div class="en-row total"><span id="sumFeeLabel">Fee</span><span id="sumFee">&#8358;0</span></div>
+            <div class="en-row hidden" id="sumPromoRow"><span>Promo price</span><span id="sumPromo"></span></div>
             <div class="en-row hidden" id="sumDiscountRow"><span id="sumDiscountLabel">Discount</span><span id="sumDiscount">&#8358;0</span></div>
+            <div class="en-row hidden" id="sumAccRow"><span>Accommodation</span><span id="sumAcc">&#8358;0</span></div>
             <div class="en-row hidden" id="sumBalanceRow"><span id="sumBalanceLabel">Balance before the class</span><span id="sumBalance">&#8358;0</span></div>
             <div class="en-row pay"><span>Pay now</span><span id="sumPayNow">&#8358;0</span></div>
             <button type="submit" form="enEnrolForm" class="en-btn" id="enPayBtn" disabled>Choose a programme</button>
@@ -164,24 +193,6 @@
   <script src="assets/js/config.js"></script>
   <script src="assets/js/enrol-common.js"></script>
   <script src="assets/js/enrol-now.js"></script>
-
-  <!-- Meta Pixel Code (Hairlux Academy) -->
-  <script>
-    !function (f, b, e, v, n, t, s) {
-      if (f.fbq) return; n = f.fbq = function () {
-        n.callMethod ?
-        n.callMethod.apply(n, arguments) : n.queue.push(arguments)
-      };
-      if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0';
-      n.queue = []; t = b.createElement(e); t.async = !0;
-      t.src = v; s = b.getElementsByTagName(e)[0];
-      s.parentNode.insertBefore(t, s)
-    }(window, document, 'script',
-      'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', '1639461031209777');
-    // No PageView here: nothing is sent from this page. Purchase is sent from the thank-you page.
-  </script>
-  <!-- End Meta Pixel Code -->
 </body>
 
 </html>

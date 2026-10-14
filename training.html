@@ -140,7 +140,7 @@
         <div class="trn-section-title">
           <div>
             <h2>Available Programmes</h2>
-            <div class="trn-section-sub">Pick a programme to see its open cohorts.</div>
+            <div class="trn-section-sub">Tap a programme to see its class dates.</div>
           </div>
         </div>
         <div style="margin-bottom:16px;">
@@ -150,14 +150,19 @@
           <div class="empty-state">Loading programmes…</div>
         </div>
 
-        <!-- ── Cohorts for selected training ── -->
+        <!-- ── Class dates for the selected training: training.js moves this
+             panel into the grid, right under the clicked programme card ── -->
         <div id="cohortsPanel" class="trn-cohorts-panel" style="display:none;">
           <div class="trn-cohorts-header">
-            <h3 id="cohortsTitle">Cohorts</h3>
-            <select id="branchFilter" class="trn-branch-filter">
-              <option value="">All branches</option>
-            </select>
+            <h3 id="cohortsTitle">Class dates</h3>
+            <div class="trn-cohorts-tools">
+              <select id="branchFilter" class="trn-branch-filter">
+                <option value="">All branches</option>
+              </select>
+              <button type="button" class="trn-cohorts-close" id="cohortsClose" aria-label="Close class dates">&times;</button>
+            </div>
           </div>
+          <div id="trainingDetails" class="trn-details" style="display:none;"></div>
           <div id="cohortsList" class="trn-cohorts-list"></div>
         </div>
 
@@ -177,6 +182,13 @@
       <div class="trn-summary-box" id="registerSummary"></div>
 
       <form class="rwd-modal-form" id="registerForm" novalidate>
+        <div class="form-group" id="accommodationGroup" style="display:none;">
+          <label class="trn-acc-check">
+            <input type="checkbox" id="withAccommodation" />
+            <span id="accommodationLabel">Book a bed in the class accommodation</span>
+          </label>
+          <div class="form-hint" id="accommodationHint"></div>
+        </div>
         <div class="form-group">
           <label for="discountCode">Discount Code (optional)</label>
           <div class="trn-discount-row">

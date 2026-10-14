@@ -9,8 +9,9 @@
  * which confirms the payment and shows the registration code.
  *
  * Links can preselect: ?training=<id>, ?cohort=<id>, ?course=<id>,
- * ?branch=<id>, ?type=course. Meta Pixel: loaded quietly (no PageView);
- * Purchase is sent from the thank-you page once the enrolment is confirmed.
+ * ?branch=<id>, ?type=course. Meta Pixel: the page loads the Academy pixel
+ * and sends PageView; Purchase is sent from the thank-you page once the
+ * enrolment is confirmed.
  */
 (function () {
   'use strict';
@@ -30,6 +31,8 @@
     branchId: '',
     plan: 'FULL',
     planTouched: false,
+    accommodation: false, // a bed in the class accommodation
+
     discount: null, // { code, discountAmount, total, deposit, depositAllowed }
     busy: false,
   };
@@ -53,31 +56,40 @@
 
   function hasOpenClass(t) { return t.cohorts.some(function (c) { return !c.full; }); }
 
-  /** Same rule as the server: % of the fee, at least the minimum, never more than the fee. */
-  function depositFor(total) {
-    var c = state.config;
-    if (!(total > 0)) return 0;
-    var byPercent = Math.ceil(total * Math.max(0, c.depositPercent) / 100);
-    return Math.min(total, Math.max(byPercent, Math.max(0, Math.round(c.minDepositAmount))));
+  /** The class accommodation when it can still be booked. */
+  function bookableAccommodation() {
+    var c = state.kind === 'TRAINING' ? cohort() : null;
+    return c && c.accommodation && c.accommodation.available ? c.accommodation : null;
   }
 
-  /** Price, discount, total and what is paid now, for the current choice. */
+  /** Price, discount, total and what is paid now, for the current choice.
+   * The deposit comes from the server (each class can have its own deposit and
+   * balance deadline). Accommodation is paid in full now, on top. */
   function amounts() {
     var t = state.kind === 'TRAINING' ? training() : null;
     var co = state.kind === 'COURSE' ? course() : null;
     var c = cohort();
     var listPrice = t ? t.price : co ? co.price : 0;
+    var regularPrice = t && t.promo ? t.regularPrice : listPrice;
     var discount = state.discount ? state.discount.discountAmount : 0;
     var total = state.discount ? state.discount.total : listPrice;
-    var depositAllowed = !!(t && c && c.depositAllowed);
+    var depositAllowed = !!(t && c && (state.discount ? state.discount.depositAllowed : c.depositAllowed));
     var deposit = 0;
     if (depositAllowed) {
-      deposit = state.discount ? state.discount.deposit : depositFor(total);
+      deposit = state.discount ? state.discount.deposit : c.deposit;
       if (!(deposit > 0) || deposit >= total) { depositAllowed = false; deposit = 0; }
     }
     var plan = depositAllowed && state.plan === 'DEPOSIT' ? 'DEPOSIT' : 'FULL';
-    var payNow = plan === 'DEPOSIT' ? deposit : total;
-    return { listPrice: listPrice, discount: discount, total: total, depositAllowed: depositAllowed, deposit: deposit, plan: plan, payNow: payNow, balance: total - payNow };
+    var trainingNow = plan === 'DEPOSIT' ? deposit : total;
+    var acc = bookableAccommodation();
+    var accFee = acc && state.accommodation ? acc.fee : 0;
+    return {
+      listPrice: listPrice, regularPrice: regularPrice, discount: discount, total: total,
+      depositAllowed: depositAllowed, deposit: deposit, plan: plan,
+      withAccommodation: !!(acc && state.accommodation), accFee: accFee,
+      payNow: trainingNow + accFee, balance: total - trainingNow,
+      balanceDueAt: (c && (state.discount ? state.discount.balanceDueAt : c.balanceDueAt)) || (c && c.startDate) || null,
+    };
   }
 
   function ready() {
@@ -109,8 +121,9 @@
           '<span class="en-radio"></span>' +
           (t.coverImageUrl ? '<img class="en-option-img" src="' + esc(t.coverImageUrl) + '" alt="" />' : '') +
           '<span class="en-option-body"><span class="en-option-name">' + esc(t.name) + '</span>' +
-          '<span class="en-option-meta">' + meta + '</span></span>' +
-          '<span class="en-option-price">' + naira(t.price) + '</span></button>';
+          '<span class="en-option-meta">' + (t.duration ? esc(t.duration.label) + ' &middot; ' : '') + meta + '</span>' +
+          (t.promo ? '<span class="en-promo">' + esc(E.promoNote(t)) + '</span>' : '') + '</span>' +
+          '<span class="en-option-price">' + E.priceHtml(t) + '</span></button>';
       }).join('') : '<div class="en-empty" style="grid-column:1/-1">No in-branch training is open right now.</div>';
     } else {
       var courses = state.config.courses;
@@ -127,6 +140,82 @@
           '<span class="en-option-price">' + (c.price > 0 ? naira(c.price) : 'Free') + (c.originalPrice ? '<s>' + naira(c.originalPrice) + '</s>' : '') + '</span></button>';
       }).join('') : '<div class="en-empty" style="grid-column:1/-1">No online course is available right now.</div>';
     }
+  }
+
+  /** What the chosen training includes: duration, benefits, kit and curriculum (by week or day when set). */
+  function renderTrainingDetails() {
+    var box = $('enTrainingDetails');
+    var t = state.kind === 'TRAINING' ? training() : null;
+    if (!t) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+    var facts = [];
+    if (t.duration) facts.push(esc(t.duration.label));
+    if (t.certificationEnabled) facts.push('Hairlux certificate');
+    if (t.kit) facts.push(t.kit.option === 'INCLUDED' ? 'Starter kit included' : 'Starter kit optional');
+    var html = '<h4>About ' + esc(t.name) + '</h4>';
+    if (facts.length) html += '<div class="en-details-facts">' + facts.map(function (f) { return '<span>' + f + '</span>'; }).join('') + '</div>';
+    if (t.benefits && t.benefits.length) {
+      html += '<h4>What is included</h4><ul class="en-benefits">' + t.benefits.map(function (b) { return '<li>' + esc(b) + '</li>'; }).join('') + '</ul>';
+    }
+    if (t.kit) {
+      html += '<div class="en-kit"><strong>' + (t.kit.option === 'INCLUDED' ? 'Starter kit (included): ' : 'Starter kit (optional, not in the fee): ') + '</strong>' + esc(t.kit.description || '') + '</div>';
+    }
+    var cur = t.curriculum || [];
+    if (cur.length) {
+      var word = t.curriculumLayout === 'WEEKS' ? 'Week' : t.curriculumLayout === 'DAYS' ? 'Day' : '';
+      var body = '';
+      if (word) {
+        var groups = [], byKey = {};
+        cur.forEach(function (m) {
+          var k = m.period ? String(m.period) : 'other';
+          if (!byKey[k]) { byKey[k] = { period: m.period, items: [] }; groups.push(byKey[k]); }
+          byKey[k].items.push(m);
+        });
+        groups.sort(function (a, b) { return (a.period || 9999) - (b.period || 9999); });
+        body = groups.map(function (g) {
+          return '<div class="en-curriculum-group"><strong>' + (g.period ? word + ' ' + g.period : 'Also covered') + '</strong><ol>' +
+            g.items.map(function (m) { return '<li>' + esc(m.name) + (m.practical ? ' <span>(practical)</span>' : '') + '</li>'; }).join('') + '</ol></div>';
+        }).join('');
+      } else {
+        body = '<ol style="margin-top:8px">' + cur.map(function (m) { return '<li>' + esc(m.name) + (m.practical ? ' <span>(practical)</span>' : '') + '</li>'; }).join('') + '</ol>';
+      }
+      html += '<details class="en-curriculum"><summary>Curriculum: ' + cur.length + (cur.length === 1 ? ' module' : ' modules') +
+        (word ? ' over ' + groupsCount(cur) + ' ' + word.toLowerCase() + (groupsCount(cur) === 1 ? '' : 's') : '') + '</summary>' + body + '</details>';
+    }
+    box.innerHTML = html;
+    box.classList.remove('hidden');
+  }
+
+  function groupsCount(cur) {
+    var seen = {};
+    cur.forEach(function (m) { if (m.period) seen[m.period] = 1; });
+    return Object.keys(seen).length;
+  }
+
+  /** Accommodation step: only for a class that offers it. */
+  function renderAccStep() {
+    var c = state.kind === 'TRAINING' ? cohort() : null;
+    var acc = c && c.accommodation;
+    $('enStepAcc').classList.toggle('hidden', !acc);
+    if (!acc) { state.accommodation = false; return; }
+    $('enAccHint').textContent = acc.available ? acc.bedsLeft + (acc.bedsLeft === 1 ? ' bed left' : ' beds left') : '';
+    var note = $('enAccNote');
+    note.classList.toggle('hidden', !acc.note);
+    note.textContent = acc.note || '';
+    if (!acc.available) {
+      state.accommodation = false;
+      $('enAccOptions').innerHTML = '<div class="en-acc-full" style="grid-column:1/-1">Accommodation for this class is fully booked. You can still enrol and arrange your own stay.</div>';
+      return;
+    }
+    var opts = [
+      { key: 'no', name: 'No accommodation', meta: 'I will arrange my own stay.' },
+      { key: 'yes', name: acc.free ? 'Book a bed: included' : 'Book a bed: ' + naira(acc.fee), meta: acc.free ? 'Free for this class. Paid nothing extra.' : 'Paid in full now, separate from the training fee.' },
+    ];
+    $('enAccOptions').innerHTML = opts.map(function (o) {
+      var on = (o.key === 'yes') === !!state.accommodation;
+      return '<button type="button" class="en-option" role="radio" data-acc="' + o.key + '" aria-checked="' + on + '">' +
+        '<span class="en-radio"></span><span class="en-option-body"><span class="en-option-name">' + esc(o.name) + '</span>' +
+        '<span class="en-option-meta">' + esc(o.meta) + '</span></span></button>';
+    }).join('');
   }
 
   function renderClassStep() {
@@ -166,12 +255,17 @@
     $('enClasses').innerHTML = list.length ? list.map(function (c) {
       var meta = [E.dateRange(c.startDate, c.endDate)];
       if (c.sessions) meta.push(c.sessions + (c.sessions === 1 ? ' session' : ' sessions'));
-      if (c.time && c.time.start) meta.push(E.timeLabel(c.time.start) + (c.time.end ? ' to ' + E.timeLabel(c.time.end) : ''));
+      var sched = E.classSchedule(c);
+      if (sched) meta.push(sched);
+      var meta2 = [];
+      if (c.instructor) meta2.push('Instructor: ' + c.instructor);
+      if (c.accommodation) meta2.push(c.accommodation.available ? 'Accommodation available' : 'Accommodation fully booked');
       var seats = c.full ? 'Full' : c.seatsLeft <= 5 ? c.seatsLeft + (c.seatsLeft === 1 ? ' seat left' : ' seats left') : '';
       return '<button type="button" class="en-option" role="radio" data-cohort="' + esc(c.id) + '" aria-checked="' + (c.id === state.cohortId) + '"' + (c.full ? ' disabled' : '') + '>' +
         '<span class="en-radio"></span>' +
         '<span class="en-option-body"><span class="en-option-name">' + esc(c.branch.name) + ' &middot; ' + esc(c.name) + '</span>' +
         '<span class="en-option-meta">' + meta.map(esc).join(' &middot; ') + '</span>' +
+        (meta2.length ? '<span class="en-option-meta">' + meta2.map(esc).join(' &middot; ') + '</span>' : '') +
         '<span class="en-option-meta">' + esc(c.branch.address) + '</span></span>' +
         (seats ? '<span class="en-option-price" style="font-size:13px;color:' + (c.full ? 'var(--muted)' : 'var(--err)') + '">' + esc(seats) + '</span>' : '') +
         '</button>';
@@ -184,16 +278,14 @@
     var show = state.kind === 'TRAINING' && !!c;
     $('enStepPay').classList.toggle('hidden', !show);
     if (!show) return;
+    var accLine = a.withAccommodation && a.accFee > 0 ? ' Accommodation (' + naira(a.accFee) + ') is added and paid now.' : '';
     if (!a.depositAllowed) {
-      $('enPayOptions').innerHTML = '<div class="en-note-inline" style="grid-column:1/-1;margin:0">' +
-        (state.config.depositEnabled
-          ? 'This class starts in less than ' + state.config.depositCutoffDays + ' days, so the full fee is paid now.'
-          : 'The full fee is paid now.') + '</div>';
+      $('enPayOptions').innerHTML = '<div class="en-note-inline" style="grid-column:1/-1;margin:0">The full fee is paid now for this class.' + esc(accLine) + '</div>';
       return;
     }
     var opts = [
-      { key: 'DEPOSIT', name: 'Pay a deposit: ' + naira(a.deposit), meta: 'Secures your seat. Pay ' + naira(a.total - a.deposit) + ' before ' + E.shortDate(c.startDate) + '.' },
-      { key: 'FULL', name: 'Pay in full: ' + naira(a.total), meta: 'Nothing more to pay.' },
+      { key: 'DEPOSIT', name: 'Pay a deposit: ' + naira(a.deposit), meta: 'Secures your seat. Pay ' + naira(a.total - a.deposit) + ' by ' + E.shortDate(a.balanceDueAt) + '.' + accLine },
+      { key: 'FULL', name: 'Pay in full: ' + naira(a.total), meta: 'Nothing more to pay.' + accLine },
     ];
     $('enPayOptions').innerHTML = opts.map(function (o) {
       return '<button type="button" class="en-option" role="radio" data-plan="' + o.key + '" aria-checked="' + (a.plan === o.key) + '">' +
@@ -226,12 +318,18 @@
     $('sumProgramme').textContent = state.kind === 'TRAINING' ? (t ? t.name : 'Not chosen') : (co ? co.title : 'Not chosen');
     $('sumClassRow').classList.toggle('hidden', state.kind !== 'TRAINING');
     $('sumClass').textContent = c ? c.branch.name + ', ' + E.dateRange(c.startDate, c.endDate) : 'Not chosen';
-    $('sumFee').textContent = naira(a.listPrice);
+    var promoOn = state.kind === 'TRAINING' && t && t.promo;
+    $('sumFeeLabel').textContent = promoOn ? 'Normal fee' : (a.withAccommodation ? 'Training fee' : 'Fee');
+    $('sumFee').innerHTML = promoOn ? '<s>' + naira(a.regularPrice) + '</s>' : naira(a.listPrice);
+    $('sumPromoRow').classList.toggle('hidden', !promoOn);
+    $('sumPromo').textContent = promoOn ? naira(a.listPrice) : '';
+    $('sumAccRow').classList.toggle('hidden', !a.withAccommodation);
+    $('sumAcc').textContent = a.accFee > 0 ? naira(a.accFee) : 'Included';
     $('sumDiscountRow').classList.toggle('hidden', !(a.discount > 0));
     $('sumDiscountLabel').textContent = state.discount ? 'Discount (' + state.discount.code + ')' : 'Discount';
     $('sumDiscount').textContent = '−' + naira(a.discount);
     $('sumBalanceRow').classList.toggle('hidden', !(a.balance > 0));
-    $('sumBalanceLabel').textContent = c ? 'Balance before ' + E.shortDate(c.startDate) : 'Balance before the class';
+    $('sumBalanceLabel').textContent = a.balanceDueAt ? 'Balance due by ' + E.shortDate(a.balanceDueAt) : 'Balance before the class';
     $('sumBalance').textContent = naira(a.balance);
     $('sumPayNow').textContent = naira(ready() ? a.payNow : 0);
     $('barPayNow').textContent = naira(ready() ? a.payNow : 0);
@@ -252,7 +350,9 @@
   function renderAll() {
     renderKinds();
     renderProgrammes();
+    renderTrainingDetails();
     renderClassStep();
+    renderAccStep();
     renderPayOptions();
     renumber();
     updateSummary();
@@ -284,7 +384,7 @@
     $('enDiscountApply').disabled = true;
     try {
       var q = await E.api('/public/academy/enrolment/quote', { method: 'POST', body: JSON.stringify(body) });
-      state.discount = { code: q.code, discountAmount: q.discountAmount, total: q.total, deposit: q.deposit, depositAllowed: q.depositAllowed };
+      state.discount = { code: q.code, discountAmount: q.discountAmount, total: q.total, deposit: q.deposit, depositAllowed: q.depositAllowed, balanceDueAt: q.balanceDueAt };
       discountMsg(q.discountAmount > 0 ? q.name + ': ' + naira(q.discountAmount) + ' off.' : 'Code accepted.', true);
     } catch (e) {
       state.discount = null;
@@ -315,6 +415,7 @@
       courseId: state.courseId,
       branchId: state.branchId,
       plan: state.plan,
+      accommodation: state.accommodation,
       fullName: $('enName').value,
       phone: $('enPhone').value,
       email: $('enEmail').value,
@@ -346,6 +447,7 @@
       if (f.courseId && c.courses.some(function (x) { return x.id === f.courseId; })) state.courseId = f.courseId;
       state.cohortId = f.cohortId || null;
       if (f.plan) { state.plan = f.plan; state.planTouched = true; }
+      state.accommodation = !!f.accommodation;
     }
     if (q.get('branch')) state.branchId = q.get('branch');
     else if (f.branchId && !linked) state.branchId = f.branchId;
@@ -428,7 +530,10 @@
       paymentPlan: a.plan,
       acceptTerms: true,
     }, E.attribution());
-    if (state.kind === 'TRAINING') payload.cohortId = state.cohortId; else payload.courseId = state.courseId;
+    if (state.kind === 'TRAINING') {
+      payload.cohortId = state.cohortId;
+      if (a.withAccommodation) payload.withAccommodation = true;
+    } else payload.courseId = state.courseId;
     if (state.discount) payload.discountCode = state.discount.code;
 
     var buttons = [$('enPayBtn'), $('enPayBtnMobile')];
@@ -507,6 +612,15 @@
       refreshDiscount();
       saveForm();
     });
+    $('enAccOptions').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-acc]');
+      if (!b) return;
+      state.accommodation = b.dataset.acc === 'yes';
+      renderAccStep();
+      renderPayOptions();
+      updateSummary();
+      saveForm();
+    });
     $('enPayOptions').addEventListener('click', function (e) {
       var b = e.target.closest('[data-plan]');
       if (!b) return;
@@ -558,7 +672,7 @@
       $('enLoading').innerHTML = '<p style="color:var(--muted)">We could not load the programmes. Please check your connection and <a href="">try again</a>.</p>';
       return;
     }
-    E.initPixel(state.config.metaPixelId, false);
+    E.initPixel(state.config.metaPixelId, true); // fallback when the page snippet is missing
     $('enLoading').classList.add('hidden');
     if (!state.config.enabled || (!state.config.trainings.length && !state.config.courses.length)) {
       if (state.config.enabled) $('enUnavailableText').textContent = 'There are no programmes open for enrolment right now. Please check back soon or contact us.';

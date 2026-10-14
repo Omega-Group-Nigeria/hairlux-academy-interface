@@ -48,10 +48,46 @@
     };
   }
 
-  /** Same as My Training: session times shown in Lagos time. */
+  /** Same as My Training: session times shown in Lagos time. A cohort's daily
+   * hours come as "HH:MM" (already Lagos time) and are shown as e.g. "9:00 am". */
   function timeLabel(v) {
     if (!v) return '';
+    var hm = /^(\d{1,2}):(\d{2})$/.exec(String(v));
+    if (hm) {
+      var h = Number(hm[1]);
+      return ((h % 12) || 12) + ':' + hm[2] + (h >= 12 ? ' pm' : ' am');
+    }
     return new Date(v).toLocaleTimeString('en-NG', { hour: 'numeric', minute: '2-digit', timeZone: 'Africa/Lagos' });
+  }
+
+  /** "Mon, Wed, Fri, 9:00 am to 3:00 pm" for a class (days and hours set on the cohort, else the first session time). */
+  function classSchedule(c) {
+    if (!c) return '';
+    var parts = [];
+    if (c.schedule && c.schedule.daysLabel) parts.push(c.schedule.daysLabel);
+    if (c.time && c.time.start) parts.push(timeLabel(c.time.start) + (c.time.end ? ' to ' + timeLabel(c.time.end) : ''));
+    return parts.join(', ');
+  }
+
+  /** Text of a rich-text (HTML) field such as a training description, for short previews. */
+  function plainText(html) {
+    // DOMParser builds an inert document: nothing in it loads or runs.
+    var doc = new DOMParser().parseFromString(String(html == null ? '' : html), 'text/html');
+    return ((doc.body && doc.body.textContent) || '').replace(/\s+/g, ' ').trim();
+  }
+
+  /** Price HTML: the price now, with the normal price struck through while a promotion runs. */
+  function priceHtml(t) {
+    if (!t) return '';
+    if (t.promo && t.regularPrice > t.price) return naira(t.price) + '<s>' + naira(t.regularPrice) + '</s>';
+    return t.price > 0 ? naira(t.price) : 'Free';
+  }
+
+  /** "Promo price until Sat 31 Oct" (null when no promotion runs). */
+  function promoNote(t) {
+    if (!t || !t.promo) return null;
+    var save = t.regularPrice - t.price;
+    return 'Promo: save ' + naira(save) + (t.promo.endsAt ? ' until ' + dateLabel(t.promo.endsAt, { year: undefined }) : '');
   }
 
   function dateRange(start, end) {
@@ -157,19 +193,23 @@
     } catch (e) { /* cookies blocked: attribution falls back to Meta's own matching */ }
   }
 
-  /** Loads the pixel (Pixel ID from admin settings). pageView: send PageView too (landing page only). */
+  /**
+   * Fallback only. programmes.html, enrol-now.html and enrolment-confirmed.html
+   * load the Academy pixel themselves (Meta Pixel Code in the page), so when it
+   * is already there this does nothing and no PageView is sent twice. Without
+   * the page snippet, the Pixel ID from admin settings is loaded instead.
+   * pageView: send PageView too (landing and enrolment pages).
+   */
   function initPixel(id, pageView) {
-    if (!id) return;
-    if (!window.fbq) {
-      /* eslint-disable */
-      !function (f, b, e, v, n, t, s) {
-        if (f.fbq) return; n = f.fbq = function () { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments) };
-        if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0'; n.queue = []; t = b.createElement(e); t.async = !0;
-        t.src = v; s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s)
-      }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
-      /* eslint-enable */
-      window.fbq('init', id);
-    }
+    if (!id || window.fbq) return;
+    /* eslint-disable */
+    !function (f, b, e, v, n, t, s) {
+      if (f.fbq) return; n = f.fbq = function () { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments) };
+      if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0'; n.queue = []; t = b.createElement(e); t.async = !0;
+      t.src = v; s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s)
+    }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+    /* eslint-enable */
+    window.fbq('init', id);
     if (pageView) window.fbq('track', 'PageView');
   }
 
@@ -190,6 +230,10 @@
     shortDate: shortDate,
     dateParts: dateParts,
     timeLabel: timeLabel,
+    classSchedule: classSchedule,
+    priceHtml: priceHtml,
+    plainText: plainText,
+    promoNote: promoNote,
     dateRange: dateRange,
     minutesLabel: minutesLabel,
     api: api,

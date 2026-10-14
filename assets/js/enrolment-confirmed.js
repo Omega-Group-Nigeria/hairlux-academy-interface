@@ -103,15 +103,18 @@
     $('doneCode').textContent = isTraining ? r.registrationCode : r.orderCode;
 
     var c = r.cohort;
-    var time = c && c.time && c.time.start ? E.timeLabel(c.time.start) + (c.time.end ? ' to ' + E.timeLabel(c.time.end) : '') : '';
+    var time = E.classSchedule(c);
     $('doneRows').innerHTML = rows([
       ['Programme', esc(r.trainingName || (r.course && r.course.title) || r.programName)],
       c ? ['Class', esc(c.name)] : null,
       c && c.branch ? ['Branch', esc(c.branch.name) + '<br><span class="muted" style="font-weight:400">' + esc(c.branch.address) + '</span>'] : null,
       c ? ['Dates', esc(E.dateRange(c.startDate, c.endDate))] : null,
-      time ? ['First session', esc(time)] : null,
-      ['Fee', naira(r.listPrice), 'total'],
+      time ? [c.schedule && c.schedule.daysLabel ? 'Class hours' : 'First session', esc(time)] : null,
+      [r.accommodation ? 'Training fee' : 'Fee', naira(r.listPrice), 'total'],
       r.discountAmount > 0 ? ['Discount', '−' + naira(r.discountAmount)] : null,
+      r.accommodation ? ['Accommodation', r.accommodation.booked
+        ? (r.accommodation.fee > 0 ? naira(r.accommodation.fee) + ' (bed booked)' : 'Bed booked (included)')
+        : 'Fully booked when your payment arrived. We will refund ' + naira(r.accommodation.fee) + '.'] : null,
       ['Paid now', naira(r.amountPaid)],
       ['Balance', r.balanceDue > 0 ? naira(r.balanceDue) : 'Nothing, fully paid', 'pay'],
     ]);
@@ -119,7 +122,7 @@
     if (r.balanceDue > 0 && r.registrationCode) {
       show('doneBalance', true);
       $('doneBalanceTitle').textContent = 'Balance of ' + naira(r.balanceDue) + ' before your class';
-      $('doneBalanceText').textContent = 'Your deposit holds your seat. Pay the balance before ' + (c ? E.dateLabel(c.startDate) : 'your class starts') +
+      $('doneBalanceText').textContent = 'Your deposit holds your seat. Pay the balance ' + (r.balanceDueAt ? 'by ' + E.dateLabel(r.balanceDueAt) : c ? 'before ' + E.dateLabel(c.startDate) : 'before your class starts') +
         ', online now or later from the link in your email, or at the branch. We will remind you before the start date.';
       $('doneBalanceBtn').href = 'pay-balance.html?code=' + encodeURIComponent(r.registrationCode);
     }

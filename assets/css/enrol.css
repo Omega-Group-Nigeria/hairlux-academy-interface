@@ -383,3 +383,29 @@ section.alt { background: var(--surface); border-top: 1px solid var(--line); bor
 .en-actions .en-btn { margin-top: 0; }
 .en-center { text-align: center; padding: 48px 16px; }
 .en-center .en-spinner { width: 34px; height: 34px; border-width: 3px; color: var(--gold-strong); }
+
+/* ── Training extras (2026-10-13): promotion, chips, details, accommodation ── */
+.card-promo { display: inline-block; align-self: flex-start; font-size: 12px; font-weight: 700; color: var(--ok); background: rgba(47, 143, 91, .12); padding: 3px 9px; border-radius: 999px; margin: 2px 0 6px; }
+.card-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 8px; }
+.card-chips span { font-size: 12px; padding: 3px 9px; border-radius: 999px; background: var(--surface-2); color: var(--text); }
+.class-meta s { color: var(--muted); }
+.en-option-price s { text-decoration: line-through; }
+.en-promo { display: inline-block; font-size: 12px; font-weight: 700; color: var(--ok); background: rgba(47, 143, 91, .12); padding: 2px 8px; border-radius: 999px; margin-top: 4px; }
+.en-details { margin-top: 14px; border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; background: var(--surface); }
+.en-details h4 { margin: 0 0 8px; font-size: 14px; }
+.en-details-facts { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.en-details-facts span { font-size: 13px; padding: 4px 10px; border-radius: 999px; background: var(--gold-soft); }
+.en-benefits { list-style: none; margin: 0 0 12px; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 6px 14px; }
+.en-benefits li { position: relative; padding-left: 22px; font-size: 14px; line-height: 1.45; }
+.en-benefits li::before { content: ""; position: absolute; left: 2px; top: 5px; width: 12px; height: 7px; border-left: 2px solid var(--gold); border-bottom: 2px solid var(--gold); transform: rotate(-45deg); }
+.en-kit { font-size: 14px; margin: 0 0 12px; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); }
+.en-curriculum summary { cursor: pointer; font-weight: 600; font-size: 14px; }
+.en-curriculum-group { margin-top: 10px; }
+.en-curriculum-group strong { display: block; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 4px; }
+.en-curriculum ol { margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.6; }
+.en-curriculum ol li span { color: var(--muted); font-size: 13px; }
+.en-acc-full { font-size: 13px; color: var(--muted); }
+@media (max-width: 560px) {
+  .en-details { padding: 12px; }
+  .en-benefits { grid-template-columns: 1fr; }
+}
