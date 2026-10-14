@@ -45,8 +45,8 @@
     if (c.depositPercent > 0) parts.push(c.depositPercent + '% of the fee');
     if (c.minDepositAmount > 0) parts.push((c.depositPercent > 0 ? 'at least ' : '') + naira(c.minDepositAmount));
     $('chipDeposit').textContent = 'Secure your seat with a ' + (c.depositPercent > 0 ? c.depositPercent + '% ' : '') + 'deposit';
-    $('faqDeposit').textContent = 'For in-branch training you can pay ' + (parts.join(', ') || 'part of the fee') +
-      ' to secure your seat, when the class starts at least ' + c.depositCutoffDays + ' days away. The balance is paid before your class starts. Online courses are paid in full.';
+    $('faqDeposit').textContent = 'For in-branch training you can usually pay ' + (parts.join(', ') || 'part of the fee') +
+      ' to secure your seat, when the class starts at least ' + c.depositCutoffDays + ' days away. The balance is paid before your class starts. Some classes have their own deposit and deadline, shown before you pay. Online courses are paid in full.';
   }
 
   function trainingCard(t) {
@@ -56,14 +56,21 @@
     var nextLine = next
       ? 'Next class: ' + E.shortDate(next.startDate) + ', ' + esc(next.branch.name) + (open.length > 1 ? ' &middot; ' + (open.length - 1) + ' more date' + (open.length > 2 ? 's' : '') : '')
       : (t.cohorts.length ? 'All current classes are full' : 'New dates coming soon');
+    var chips = [];
+    if (t.duration) chips.push(esc(t.duration.label));
+    if (t.kit) chips.push(t.kit.option === 'INCLUDED' ? 'Starter kit included' : 'Starter kit available');
+    if (t.cohorts.some(function (c) { return c.accommodation && c.accommodation.available; })) chips.push('Accommodation available');
+    var promo = E.promoNote(t);
     return '<a class="card" href="' + esc(href) + '">' +
       (t.coverImageUrl ? '<img class="card-img" src="' + esc(t.coverImageUrl) + '" alt="" loading="lazy" />' : '<div class="card-img-blank">' + CAP_ICON + '</div>') +
       '<div class="card-body">' +
       '<div class="card-kind">In-branch training' + (t.category ? ' &middot; ' + esc(t.category) : '') + '</div>' +
       '<div class="card-name">' + esc(t.name) + '</div>' +
-      (t.description ? '<div class="card-desc">' + esc(t.description) + '</div>' : '') +
+      (promo ? '<div class="card-promo">' + esc(promo) + '</div>' : '') +
+      (t.description ? '<div class="card-desc">' + esc(E.plainText(t.description)) + '</div>' : '') +
+      (chips.length ? '<div class="card-chips">' + chips.map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div>' : '') +
       '<div class="card-next">' + nextLine + '</div>' +
-      '<div class="card-foot"><span class="card-price">' + naira(t.price) + '</span>' +
+      '<div class="card-foot"><span class="card-price">' + E.priceHtml(t) + '</span>' +
       '<span class="card-cta">' + (next ? 'Enrol &rarr;' : 'See details &rarr;') + '</span></div>' +
       '</div></a>';
   }
@@ -108,12 +115,18 @@
       var p = E.dateParts(r.c.startDate);
       var meta = [esc(r.c.branch.name), E.dateRange(r.c.startDate, r.c.endDate)];
       if (r.c.sessions) meta.push(r.c.sessions + (r.c.sessions === 1 ? ' session' : ' sessions'));
-      if (r.c.time && r.c.time.start) meta.push(E.timeLabel(r.c.time.start) + (r.c.time.end ? ' to ' + E.timeLabel(r.c.time.end) : ''));
+      var sched = E.classSchedule(r.c);
+      if (sched) meta.push(esc(sched));
+      var extra = [];
+      if (r.c.instructor) extra.push('Instructor: ' + esc(r.c.instructor));
+      var acc = r.c.accommodation;
+      if (acc) extra.push(acc.available ? 'Accommodation ' + (acc.free ? 'included' : naira(acc.fee)) + ' (' + acc.bedsLeft + (acc.bedsLeft === 1 ? ' bed' : ' beds') + ' left)' : 'Accommodation fully booked');
       return '<div class="class-row">' +
         '<div class="class-date"><small>' + esc(p.month) + '</small><strong>' + esc(p.day) + '</strong><small>' + esc(p.weekday) + '</small></div>' +
         '<div class="class-info"><div class="class-name">' + esc(r.t.name) + seatsBadge(r.c) + '</div>' +
         '<div class="class-meta">' + meta.join(' &middot; ') + '</div>' +
-        '<div class="class-meta">' + naira(r.t.price) + (r.c.depositAllowed ? ' &middot; secure your seat with ' + naira(r.c.deposit) : '') + '</div></div>' +
+        (extra.length ? '<div class="class-meta">' + extra.join(' &middot; ') + '</div>' : '') +
+        '<div class="class-meta">' + (r.t.promo ? naira(r.t.price) + ' <s>' + naira(r.t.regularPrice) + '</s>' : naira(r.t.price)) + (r.c.depositAllowed ? ' &middot; secure your seat with ' + naira(r.c.deposit) : '') + '</div></div>' +
         (r.c.full
           ? '<span class="btn btn-ghost btn-small" aria-disabled="true">Full</span>'
           : '<a class="btn btn-primary btn-small" href="' + esc(enrolUrl({ cohort: r.c.id })) + '">Enrol</a>') +

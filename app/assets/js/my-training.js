@@ -60,7 +60,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       ['Cohort', r.cohort.name],
       ['Dates', `${fmtDate(r.cohort.startDate)} – ${fmtDate(r.cohort.endDate)}`],
       next ? ['Next session', next] : null,
-      r.cohort.trainerName ? ['Trainer', r.cohort.trainerName] : null,
+      r.cohort.daysLabel || r.cohort.hoursLabel ? ['Class days', [r.cohort.daysLabel, r.cohort.hoursLabel].filter(Boolean).join(', ')] : null,
+      r.cohort.trainerName ? ['Instructor', r.cohort.trainerName] : null,
+      r.accommodation ? ['Accommodation', 'Bed booked' + (Number(r.accommodation.fee) > 0 ? ` (${money(r.accommodation.fee)})` : ' (included)')] : null,
     ].filter(Boolean);
 
     // Enrolled with a deposit: the balance is due before the class starts.
@@ -69,7 +71,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let notes = '';
     if (owing) {
-      notes = `<div class="trn-card-note">Balance ${money(r.balanceDue)} due before ${fmtDate(r.balanceDueAt || r.cohort.startDate)}. You cannot be marked present until it is paid.</div>`;
+      notes = `<div class="trn-card-note">Balance ${money(r.balanceDue)} due by ${fmtDate(r.balanceDueAt || r.cohort.startDate)}. You cannot be marked present until it is paid.</div>`;
     } else if (stage === 'PENDING_PAYMENT') {
       notes = `<div class="trn-card-note">Payment not confirmed${r.order ? ` · ${money(r.order.amount)}` : ''}${r.expiresAt ? ` · seat held until ${fmtDate(r.expiresAt)}` : ''}</div>`;
     } else if (stage === 'WAITLISTED') {

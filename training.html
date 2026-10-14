@@ -158,6 +158,7 @@
               <option value="">All branches</option>
             </select>
           </div>
+          <div id="trainingDetails" class="trn-details" style="display:none;"></div>
           <div id="cohortsList" class="trn-cohorts-list"></div>
         </div>
 
@@ -177,6 +178,13 @@
       <div class="trn-summary-box" id="registerSummary"></div>
 
       <form class="rwd-modal-form" id="registerForm" novalidate>
+        <div class="form-group" id="accommodationGroup" style="display:none;">
+          <label class="trn-acc-check">
+            <input type="checkbox" id="withAccommodation" />
+            <span id="accommodationLabel">Book a bed in the class accommodation</span>
+          </label>
+          <div class="form-hint" id="accommodationHint"></div>
+        </div>
         <div class="form-group">
           <label for="discountCode">Discount Code (optional)</label>
           <div class="trn-discount-row">
