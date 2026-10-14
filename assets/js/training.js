@@ -91,6 +91,10 @@ window.HAIRLUX_PUBLIC_PAGE = true;
       function renderTrainingsGrid() {
         const grid = document.getElementById('trainingsGrid');
         const list = filteredTrainings();
+        // Take the dates panel out before the grid is rebuilt; it goes back under
+        // the open programme's card at the end (or stays hidden if a search hides it).
+        parkCohortsPanel();
+        cohortsPanel.style.display = 'none';
         if (!trainingsCache.length) {
           grid.innerHTML = '<div class="empty-state">No programmes are published yet: check back soon.</div>';
           return;
@@ -105,8 +109,9 @@ window.HAIRLUX_PUBLIC_PAGE = true;
           if (t.durationLabel) chips.push(esc(t.durationLabel));
           if (t.kitOption === 'INCLUDED') chips.push('Starter kit included');
           else if (t.kitOption === 'OPTIONAL') chips.push('Starter kit available');
+          const open = t.id === selectedTrainingId;
           return `
-            <div class="trn-card" data-id="${t.id}">
+            <div class="trn-card${open ? ' is-active' : ''}" data-id="${t.id}" role="button" tabindex="0" aria-controls="cohortsPanel" aria-expanded="${open ? 'true' : 'false'}">
               ${t.coverImageUrl ? `<img src="${t.coverImageUrl}" alt="" class="trn-card-image" style="width:100%;height:140px;object-fit:cover;border-radius:8px;margin-bottom:10px;">` : ''}
               <div class="trn-card-top">
                 <div class="trn-card-name">${t.name}</div>
@@ -120,13 +125,82 @@ window.HAIRLUX_PUBLIC_PAGE = true;
                 <div class="trn-card-price">${priceHtml(t)}</div>
                 ${t.certificationEnabled ? '<div class="trn-card-cert">\u{1F393} Certificate included</div>' : ''}
               </div>
+              <div class="trn-card-toggle"><span>${open ? 'Hide class dates' : 'View class dates'}</span>${CHEVRON}</div>
             </div>`;
         }).join('');
 
         grid.querySelectorAll('.trn-card').forEach(card => {
-          card.addEventListener('click', () => selectTraining(card.dataset.id));
+          card.addEventListener('click', () => toggleTraining(card.dataset.id));
+          card.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleTraining(card.dataset.id); }
+          });
+        });
+
+        // Keep the open programme's dates under its card (hidden while a search hides the card).
+        if (selectedTrainingId) cohortsPanel.style.display = placeCohortsPanel() ? '' : 'none';
+      }
+
+      // ── Class dates open under the clicked programme ────────────
+      // The dates panel is moved into the grid as a full-width row right after
+      // the row holding the clicked card (directly under the card on phones),
+      // so it opens like a dropdown instead of at the bottom of the page.
+      const CHEVRON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+      const cohortsPanel = document.getElementById('cohortsPanel');
+      const cohortsPanelHome = cohortsPanel.parentNode;
+      const cohortsPanelNext = cohortsPanel.nextSibling;
+
+      function parkCohortsPanel() {
+        if (cohortsPanel.parentNode !== cohortsPanelHome) cohortsPanelHome.insertBefore(cohortsPanel, cohortsPanelNext);
+      }
+
+      /** Puts the panel under the selected card's row. False when the card is not on screen. */
+      function placeCohortsPanel() {
+        const grid = document.getElementById('trainingsGrid');
+        const cards = Array.from(grid.querySelectorAll('.trn-card'));
+        const index = cards.findIndex(c => c.dataset.id === selectedTrainingId);
+        if (index === -1) { parkCohortsPanel(); return false; }
+        const cols = Math.max(1, getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length);
+        const rowEnd = Math.min(Math.floor(index / cols) * cols + cols - 1, cards.length - 1);
+        cards[rowEnd].after(cohortsPanel);
+        // Point the panel's arrow at the clicked card.
+        const gridBox = grid.getBoundingClientRect();
+        const cardBox = cards[index].getBoundingClientRect();
+        cohortsPanel.style.setProperty('--trn-caret-left', `${Math.round(cardBox.left - gridBox.left + cardBox.width / 2)}px`);
+        return true;
+      }
+
+      function syncCardStates() {
+        document.querySelectorAll('.trn-card').forEach(c => {
+          const open = c.dataset.id === selectedTrainingId;
+          c.classList.toggle('is-active', open);
+          c.setAttribute('aria-expanded', open ? 'true' : 'false');
+          const label = c.querySelector('.trn-card-toggle span');
+          if (label) label.textContent = open ? 'Hide class dates' : 'View class dates';
         });
       }
+
+      function closeCohortsPanel() {
+        selectedTrainingId = null;
+        cohortsPanel.style.display = 'none';
+        parkCohortsPanel();
+        syncCardStates();
+      }
+
+      /** Clicking the open programme again closes its dates. */
+      function toggleTraining(trainingId) {
+        if (trainingId === selectedTrainingId && cohortsPanel.style.display !== 'none') closeCohortsPanel();
+        else selectTraining(trainingId);
+      }
+
+      document.getElementById('cohortsClose').addEventListener('click', closeCohortsPanel);
+
+      let panelResizeTimer = null;
+      window.addEventListener('resize', () => {
+        clearTimeout(panelResizeTimer);
+        panelResizeTimer = setTimeout(() => {
+          if (selectedTrainingId && cohortsPanel.style.display !== 'none') placeCohortsPanel();
+        }, 120);
+      });
 
       async function loadTrainings() {
         const grid = document.getElementById('trainingsGrid');
@@ -142,7 +216,7 @@ window.HAIRLUX_PUBLIC_PAGE = true;
       // ── Cohorts for a selected training ─────────────────────────
       async function selectTraining(trainingId) {
         selectedTrainingId = trainingId;
-        document.querySelectorAll('.trn-card').forEach(c => c.classList.toggle('is-active', c.dataset.id === trainingId));
+        syncCardStates();
 
         const training = trainingsCache.find(t => t.id === trainingId);
         const panel = document.getElementById('cohortsPanel');
@@ -150,10 +224,12 @@ window.HAIRLUX_PUBLIC_PAGE = true;
         const title = document.getElementById('cohortsTitle');
         const branchFilter = document.getElementById('branchFilter');
 
-        title.textContent = training ? `Cohorts: ${training.name}` : 'Cohorts';
+        title.textContent = training ? `Class dates: ${training.name}` : 'Class dates';
         renderTrainingDetails(training);
+        branchFilter.value = '';
+        list.innerHTML = '<div class="empty-state">Loading class dates…</div>';
+        placeCohortsPanel();
         panel.style.display = '';
-        list.innerHTML = '<div class="empty-state">Loading cohorts…</div>';
         panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
         try {
@@ -165,7 +241,7 @@ window.HAIRLUX_PUBLIC_PAGE = true;
 
           renderCohorts('');
         } catch (err) {
-          list.innerHTML = '<div class="empty-state">Could not load cohorts for this programme.</div>';
+          list.innerHTML = '<div class="empty-state">Could not load class dates for this programme.</div>';
         }
       }
 

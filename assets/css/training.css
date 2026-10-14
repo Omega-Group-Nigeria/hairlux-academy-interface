@@ -178,6 +178,34 @@
     }
     .trn-cohorts-list { padding: 8px 22px 20px; display: flex; flex-direction: column; gap: 10px; }
 
+    /* ── Class dates as a dropdown under the clicked programme ── */
+    .trn-card:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+    .trn-card-toggle {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      margin-top: 2px; padding-top: 10px; border-top: 1px dashed var(--border);
+      font-size: 12.5px; font-weight: 700; color: var(--primary);
+    }
+    .trn-card-toggle svg { width: 16px; height: 16px; flex-shrink: 0; transition: transform .18s; }
+    .trn-card.is-active .trn-card-toggle svg { transform: rotate(180deg); }
+    .trn-grid > .trn-cohorts-panel {
+      grid-column: 1 / -1; margin-top: 0; position: relative; overflow: visible;
+      border-color: var(--primary); animation: trnDrop .18s ease-out;
+    }
+    .trn-grid > .trn-cohorts-panel::before {
+      content: ""; position: absolute; top: -8px; left: var(--trn-caret-left, 40px);
+      width: 14px; height: 14px; margin-left: -7px; z-index: 1;
+      background: var(--card-bg); border-left: 1px solid var(--primary); border-top: 1px solid var(--primary);
+      transform: rotate(45deg);
+    }
+    .trn-cohorts-tools { display: flex; align-items: center; gap: 8px; }
+    .trn-cohorts-close {
+      width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border);
+      background: transparent; color: var(--primary); font-size: 18px; line-height: 1; cursor: pointer;
+    }
+    .trn-cohorts-close:hover { border-color: var(--primary); }
+    @keyframes trnDrop { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+    @media (prefers-reduced-motion: reduce) { .trn-grid > .trn-cohorts-panel { animation: none; } }
+
     .trn-cohort-row {
       display: flex; align-items: center; justify-content: space-between; gap: 14px;
       flex-wrap: wrap;
