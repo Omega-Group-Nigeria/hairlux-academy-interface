@@ -5,8 +5,8 @@
  * courses with their fees, the upcoming class dates and the training
  * branches (from the same public config the enrolment page uses), and every
  * "Enrol" button goes to enrol-now.html with the ad tags of this visit. Meta
- * Pixel PageView fires here when a Pixel ID is set in admin
- * (Academy > Enrolments > Settings).
+ * Pixel: the page loads the Academy pixel and sends PageView. The Pixel ID in
+ * admin (Academy > Enrolments > Settings) is only used if that is missing.
  */
 (function () {
   'use strict';

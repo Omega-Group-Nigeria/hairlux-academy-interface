@@ -9,8 +9,9 @@
  * which confirms the payment and shows the registration code.
  *
  * Links can preselect: ?training=<id>, ?cohort=<id>, ?course=<id>,
- * ?branch=<id>, ?type=course. Meta Pixel: loaded quietly (no PageView);
- * Purchase is sent from the thank-you page once the enrolment is confirmed.
+ * ?branch=<id>, ?type=course. Meta Pixel: the page loads the Academy pixel
+ * and sends PageView; Purchase is sent from the thank-you page once the
+ * enrolment is confirmed.
  */
 (function () {
   'use strict';
@@ -671,7 +672,7 @@
       $('enLoading').innerHTML = '<p style="color:var(--muted)">We could not load the programmes. Please check your connection and <a href="">try again</a>.</p>';
       return;
     }
-    E.initPixel(state.config.metaPixelId, false);
+    E.initPixel(state.config.metaPixelId, true); // fallback when the page snippet is missing
     $('enLoading').classList.add('hidden');
     if (!state.config.enabled || (!state.config.trainings.length && !state.config.courses.length)) {
       if (state.config.enabled) $('enUnavailableText').textContent = 'There are no programmes open for enrolment right now. Please check back soon or contact us.';
