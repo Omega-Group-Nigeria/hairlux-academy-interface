@@ -346,7 +346,9 @@ window.HAIRLUX_PUBLIC_PAGE = true;
         }
         selectedCohort = cohort;
         appliedDiscount = null;
+        currentQuote = null;
         registerForm.reset();
+        document.getElementById('paymentPlanGroup').style.display = 'none';
         discountHint.textContent = '';
         discountError.classList.remove('is-visible');
 
@@ -399,8 +401,57 @@ window.HAIRLUX_PUBLIC_PAGE = true;
         if (withAcc) parts.push(`Training ${fmtNaira(trainingFee)} + accommodation ${accFee > 0 ? fmtNaira(accFee) : 'included'}`);
         const breakdown = document.getElementById('registerPriceBreakdown');
         if (breakdown) breakdown.textContent = parts.join(' · ');
+        refreshPaymentPlan(withAcc);
       }
       document.getElementById('withAccommodation').addEventListener('change', updateRegisterPrice);
+
+      // ── Part payment: deposit now to secure the seat, balance before the class ──
+      let currentQuote = null;
+      let quoteSeq = 0;
+      const planGroup = document.getElementById('paymentPlanGroup');
+
+      function selectedPlan() {
+        const checked = document.querySelector('input[name="paymentPlan"]:checked');
+        return checked && checked.value === 'DEPOSIT' && currentQuote && currentQuote.depositAllowed ? 'DEPOSIT' : 'FULL';
+      }
+
+      function updateSubmitLabel() {
+        if (!selectedCohort || selectedCohort.status === 'FULL') return;
+        registerSubmit.textContent = selectedPlan() === 'DEPOSIT'
+          ? `Pay Deposit ${fmtNaira(currentQuote.payNowWithDeposit)}`
+          : 'Confirm Registration';
+      }
+
+      /** Asks the server what a deposit would be for this class, after any discount and with accommodation. */
+      async function refreshPaymentPlan(withAcc) {
+        const seq = ++quoteSeq;
+        if (!selectedCohort || selectedCohort.status === 'FULL') {
+          currentQuote = null; planGroup.style.display = 'none'; return;
+        }
+        try {
+          const quote = await AcademyTrainingAPI.getRegistrationQuote(selectedCohort.id, appliedDiscount ? appliedDiscount.code : undefined, withAcc);
+          if (seq !== quoteSeq) return; // a newer change is on its way
+          currentQuote = quote;
+        } catch (_) {
+          if (seq !== quoteSeq) return;
+          currentQuote = null; // no quote: pay in full only
+        }
+        if (!currentQuote || !currentQuote.depositAllowed) {
+          planGroup.style.display = 'none';
+          document.querySelector('input[name="paymentPlan"][value="FULL"]').checked = true;
+          updateSubmitLabel();
+          return;
+        }
+        document.getElementById('planFullAmount').textContent = `${fmtNaira(currentQuote.payInFull)} today`;
+        document.getElementById('planDepositAmount').textContent =
+          `${fmtNaira(currentQuote.payNowWithDeposit)} today, then ${fmtNaira(currentQuote.balanceDue)} by ${fmtDate(currentQuote.balanceDueAt)}`;
+        document.getElementById('paymentPlanHint').textContent = currentQuote.accommodationFee > 0
+          ? 'Accommodation is paid in full today with either option. You can pay the balance online or at the branch.'
+          : 'You can pay the balance online or at the branch. You will get reminders before it is due.';
+        planGroup.style.display = '';
+        updateSubmitLabel();
+      }
+      document.querySelectorAll('input[name="paymentPlan"]').forEach((r) => r.addEventListener('change', updateSubmitLabel));
 
       document.getElementById('registerClose').addEventListener('click', closeRegisterModal);
       document.getElementById('registerCancel').addEventListener('click', closeRegisterModal);
@@ -423,6 +474,7 @@ window.HAIRLUX_PUBLIC_PAGE = true;
           appliedDiscount = null;
           discountError.textContent = errMsg(err, 'That code is not valid.');
           discountError.classList.add('is-visible');
+          updateRegisterPrice(); // back to the undiscounted price and deposit
         }
       });
 
@@ -434,7 +486,7 @@ window.HAIRLUX_PUBLIC_PAGE = true;
         try {
           const accBox = document.getElementById('withAccommodation');
           const withAccommodation = !!(selectedCohort.accommodation && selectedCohort.accommodation.available && accBox.checked);
-          const result = await AcademyTrainingAPI.register(selectedCohort.id, appliedDiscount ? appliedDiscount.code : undefined, withAccommodation);
+          const result = await AcademyTrainingAPI.register(selectedCohort.id, appliedDiscount ? appliedDiscount.code : undefined, withAccommodation, selectedPlan());
           const training = selectedCohort.training || trainingsCache.find(t => t.id === selectedTrainingId) || {};
 
           if (result.waitlisted) {
@@ -511,6 +563,11 @@ window.HAIRLUX_PUBLIC_PAGE = true;
             <div class="trn-reg-actions"><button class="btn-trn btn-trn-primary" id="btnVerifyPayment">I've Completed Payment: Verify</button></div>`;
         } else if (isConfirmed) {
           body += `<div class="trn-reg-line" style="color:var(--success);font-weight:600;">Registration confirmed.</div>`;
+          if (Number(state.balanceDue) > 0) {
+            // Paid with a deposit: the seat is secured, the balance is due before the class.
+            body += `<div class="trn-reg-line">Your deposit secured your seat. Balance <strong>${fmtNaira(state.balanceDue)}</strong> is due by ${fmtDate(state.balanceDueAt)}.</div>`;
+            body += `<div class="trn-reg-actions"><a class="btn-trn btn-trn-primary" href="pay-balance.html?code=${encodeURIComponent(state.registrationCode)}">Pay Balance</a></div>`;
+          }
           body += `<div class="trn-reg-actions"><a class="btn-trn btn-trn-primary" href="app/id-card.html?registrationId=${encodeURIComponent(state.registrationId)}" target="_blank" rel="noopener">View My ID Card</a></div>`;
           if (state.cohortId && cachedCertificateCohortId !== state.cohortId) {
             ensureCertificateChecked(state.cohortId);
@@ -620,7 +677,9 @@ window.HAIRLUX_PUBLIC_PAGE = true;
             nameLast: (reg.applicant && reg.applicant.nameVerified) ? reg.applicant.lastName : ((state.registrationId === reg.id && state.nameLast) || (reg.applicant && reg.applicant.lastName) || ''),
             trainingName: (reg.cohort && reg.cohort.training && reg.cohort.training.name) || state.trainingName,
             cohortName: (reg.cohort && reg.cohort.name) || state.cohortName,
-            cohortId: (reg.cohort && reg.cohort.id) || state.cohortId
+            cohortId: (reg.cohort && reg.cohort.id) || state.cohortId,
+            balanceDue: Number(reg.balanceDue) || 0,
+            balanceDueAt: reg.balanceDueAt || (reg.cohort && reg.cohort.startDate) || null
           });
           renderRegPanelFromState();
         } catch (err) {

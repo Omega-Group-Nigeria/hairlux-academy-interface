@@ -189,6 +189,19 @@
           </label>
           <div class="form-hint" id="accommodationHint"></div>
         </div>
+        <!-- Part payment: shown when the class allows a deposit (same rule as the enrolment page) -->
+        <div class="form-group" id="paymentPlanGroup" style="display:none;">
+          <label>How would you like to pay?</label>
+          <label class="trn-plan-option">
+            <input type="radio" name="paymentPlan" value="FULL" checked />
+            <span><strong>Pay in full</strong><span class="trn-plan-amount" id="planFullAmount"></span></span>
+          </label>
+          <label class="trn-plan-option">
+            <input type="radio" name="paymentPlan" value="DEPOSIT" />
+            <span><strong>Pay a deposit to secure your seat</strong><span class="trn-plan-amount" id="planDepositAmount"></span></span>
+          </label>
+          <div class="form-hint" id="paymentPlanHint"></div>
+        </div>
         <div class="form-group">
           <label for="discountCode">Discount Code (optional)</label>
           <div class="trn-discount-row">

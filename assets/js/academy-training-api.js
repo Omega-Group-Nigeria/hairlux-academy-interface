@@ -56,14 +56,27 @@ const AcademyTrainingAPI = {
    * @param {boolean} [withAccommodation] book a bed (charged separately, subject to availability)
    * @returns {Promise<object>} { registration, waitlisted, authorizationUrl, payment? }
    */
-  async register(cohortId, discountCode, withAccommodation) {
+  async register(cohortId, discountCode, withAccommodation, paymentPlan) {
     const body = { cohortId };
     if (discountCode) body.discountCode = discountCode;
     if (withAccommodation) body.withAccommodation = true;
+    if (paymentPlan === 'DEPOSIT') body.paymentPlan = 'DEPOSIT';
     const res = await APIHelper.request(API_CONFIG.ENDPOINTS.ACADEMY_TRAINING.REGISTRATIONS, {
       method: 'POST',
       body: JSON.stringify(body)
     });
+    return (res && res.data) ? res.data : res;
+  },
+
+  /**
+   * What registering costs: in full, or a deposit now (to secure the seat)
+   * and the balance before the class. Display only: the server recomputes on register.
+   */
+  async getRegistrationQuote(cohortId, discountCode, withAccommodation) {
+    const q = new URLSearchParams({ cohortId });
+    if (discountCode) q.set('discountCode', discountCode);
+    if (withAccommodation) q.set('withAccommodation', 'true');
+    const res = await APIHelper.request(`${API_CONFIG.ENDPOINTS.ACADEMY_TRAINING.REGISTRATIONS}/quote?${q.toString()}`, { method: 'GET' });
     return (res && res.data) ? res.data : res;
   },
 
