@@ -372,4 +372,10 @@
     .trn-details ol { margin: 4px 0 0; padding-left: 20px; font-size: 13px; line-height: 1.6; }
     .trn-acc-check { display: flex; align-items: flex-start; gap: 8px; font-weight: 600; cursor: pointer; }
     .trn-acc-check input { margin-top: 3px; width: 16px; height: 16px; flex: none; }
+    /* Part payment choice in the register modal */
+    .trn-plan-option { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; margin-top: 8px; border: 1px solid var(--border); border-radius: 10px; cursor: pointer; font-weight: 400; }
+    .trn-plan-option input { margin-top: 3px; width: 16px; height: 16px; flex: none; }
+    .trn-plan-option strong { display: block; font-size: 14px; }
+    .trn-plan-amount { display: block; font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .trn-plan-option:has(input:checked) { border-color: var(--primary); }
     .trn-summary-price s { margin-left: 8px; font-size: 14px; font-weight: 500; color: var(--muted); }
