@@ -9,10 +9,15 @@
   <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#14171c" media="(prefers-color-scheme: dark)" />
   <link href="assets/img/logo-light.webp" rel="shortcut icon" type="image/x-icon" />
-  <script src="assets/js/theme-toggle.js"></script>
+  <!-- Speed (2026-10-27): theme set inline before first paint; the toggle script loads deferred. -->
+  <script>(function(){var t;try{t=localStorage.getItem('hairlux-theme')}catch(e){}document.documentElement.setAttribute('data-theme',t==='dark'||t==='light'?t:(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'))})();</script>
+  <script src="assets/js/theme-toggle.js" defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet" />
+  <!-- Speed (2026-10-27): fonts load without blocking the first paint; text shows at once in a system font. -->
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700&display=swap" media="print" onload="this.media='all'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700&display=swap" /></noscript>
   <link href="assets/css/enrol.css" rel="stylesheet" />
 </head>
 
@@ -20,8 +25,8 @@
   <header class="lp-header">
     <div class="wrap">
       <a href="programmes.html" class="lp-logo" aria-label="Hairlux Academy programmes">
-        <img class="logo-light" src="assets/img/logo-side-black.png" alt="Hairlux" />
-        <img class="logo-dark" src="assets/img/logo-side-white.webp" alt="Hairlux" />
+        <img class="logo-light" src="assets/img/lp/logo-side-black-80.webp" alt="Hairlux" width="107" height="34" decoding="async" />
+        <img class="logo-dark" src="assets/img/lp/logo-side-white-80.webp" alt="Hairlux" width="107" height="34" loading="lazy" decoding="async" />
         <span class="lp-logo-tag">Academy</span>
       </a>
       <div class="lp-header-actions">
