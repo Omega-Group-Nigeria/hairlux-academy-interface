@@ -16,10 +16,15 @@
   <link rel="manifest" href="manifest.webmanifest" />
   <link href="assets/img/logo-light.webp" rel="shortcut icon" type="image/x-icon" />
   <link href="assets/img/pwa/apple-touch-icon.png" rel="apple-touch-icon" />
-  <script src="assets/js/theme-toggle.js"></script>
+  <!-- Speed (2026-10-27): theme set inline before first paint; the toggle script loads deferred. -->
+  <script>(function(){var t;try{t=localStorage.getItem('hairlux-theme')}catch(e){}document.documentElement.setAttribute('data-theme',t==='dark'||t==='light'?t:(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'))})();</script>
+  <script src="assets/js/theme-toggle.js" defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet" />
+  <!-- Speed (2026-10-27): fonts load without blocking the first paint; text shows at once in a system font. -->
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700&display=swap" media="print" onload="this.media='all'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700&display=swap" /></noscript>
   <link href="assets/css/enrol.css" rel="stylesheet" />
   <!-- Meta Pixel Code (Hairlux Academy) -->
   <script>
@@ -29,9 +34,18 @@
         n.callMethod.apply(n, arguments) : n.queue.push(arguments)
       };
       if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0';
-      n.queue = []; t = b.createElement(e); t.async = !0;
-      t.src = v; s = b.getElementsByTagName(e)[0];
-      s.parentNode.insertBefore(t, s)
+      n.queue = [];
+      // Speed (2026-10-27): Meta's script loads once the page has rendered (or on the first
+      // tap or scroll). Events called before then are queued and sent when it loads.
+      var go = function () {
+        if (go.done) return; go.done = 1;
+        t = b.createElement(e); t.async = !0; t.src = v;
+        s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s);
+      };
+      f.addEventListener('load', function () {
+        if (f.requestIdleCallback) f.requestIdleCallback(go, { timeout: 2500 }); else setTimeout(go, 1);
+      });
+      ['pointerdown', 'keydown', 'scroll', 'touchstart'].forEach(function (x) { f.addEventListener(x, go, { once: true, passive: true }); })
     }(window, document, 'script',
       'https://connect.facebook.net/en_US/fbevents.js');
     fbq('init', '1639461031209777');
@@ -47,8 +61,8 @@
   <header class="lp-header">
     <div class="wrap">
       <a href="programmes.html" class="lp-logo" aria-label="Hairlux Academy programmes">
-        <img class="logo-light" src="assets/img/logo-side-black.png" alt="Hairlux" />
-        <img class="logo-dark" src="assets/img/logo-side-white.webp" alt="Hairlux" />
+        <img class="logo-light" src="assets/img/lp/logo-side-black-80.webp" alt="Hairlux" width="107" height="34" decoding="async" />
+        <img class="logo-dark" src="assets/img/lp/logo-side-white-80.webp" alt="Hairlux" width="107" height="34" loading="lazy" decoding="async" />
         <span class="lp-logo-tag">Academy</span>
       </a>
       <div class="lp-header-actions">
